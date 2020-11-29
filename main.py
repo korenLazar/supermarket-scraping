@@ -6,8 +6,9 @@ import gzip
 from enum import Enum
 from argparse import ArgumentParser, ArgumentTypeError
 import logging
+import time
 
-PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'צלחות', 'חיסול', 'כוסות', 'מאגים', 'מגבת', 'מפות']
+PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'צלחות', 'כוסות', 'מאגים', 'מגבת', 'מפות']
 
 STORE_ID_NOT_FOUND = -1
 
@@ -22,7 +23,7 @@ def xml_file_gen(category_name: str, store_id: int) -> str:
     If the given store_id is invalid, it is ignored in the returned string.
 
     :param store_id: A given store_id
-    :param category_name:
+    :param category_name: A given category name
     :return: An xml filename
     """
     store_id_str = f"-{str(store_id)}" if is_valid_store_id(store_id) else ""
@@ -35,15 +36,15 @@ class Promotion:
     It contains only part of the available information in Shufersal's data.
     """
 
-    def __init__(self, promo_content, promo_end_date, promo_update_date, items):
-        self.promo_content: str = promo_content
-        self.promo_end_date: datetime = promo_end_date
-        self.promo_update_date: datetime = promo_update_date
-        self.code_items_in_promo: List[str] = items
+    def __init__(self, content: str, end_date: datetime, update_date: datetime, code_items: List[str]):
+        self.content: str = content
+        self.end_date: datetime = end_date
+        self.update_date: datetime = update_date
+        self.code_items: List[str] = code_items
 
     def __str__(self):
-        items = '\n'.join(str(item) for item in self.code_items_in_promo)
-        return f"*** {self.promo_content} until {self.promo_end_date.date()} ***\n{items}\n"
+        items = '\n'.join(str(item) for item in self.code_items)
+        return f"*** {self.content} until {self.end_date.date()} ***\n{items}\n"
 
 
 def get_download_url(store_id: int, cat_id: int) -> str:
@@ -70,17 +71,17 @@ def create_bs_object(xml_path, download_url: str) -> BeautifulSoup:
     otherwise it downloads the gzip from the download link and extract it.
 
     :param xml_path: A given path to an xml file
-    :param download_url: A string that may represent a link (described above).
-    :return:
+    :param download_url: A string that may represent a link (described above)
+    :return: A BeautifulSoup object with xml content (either from a file or a link).
     """
     if download_url:
         xml_content = gzip.decompress(requests.get(download_url).content)
         with open(xml_path, 'wb') as f_out:
             f_out.write(xml_content)
+        return BeautifulSoup(xml_content, features='xml')
     else:
         with open(xml_path, 'rb') as f_in:
-            xml_content = f_in.read()
-    return BeautifulSoup(xml_content, features='xml')
+            return BeautifulSoup(f_in, features='xml')
 
 
 def get_available_promos(store_id: int, load_xml: bool) -> List[Promotion]:
@@ -91,25 +92,31 @@ def get_available_promos(store_id: int, load_xml: bool) -> List[Promotion]:
     :param load_xml: A boolean representing whether to load an existing xml or load an already saved one
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
+    start = time.time()
     items_dict = create_items_dict(store_id, load_xml)
 
     down_url = get_download_url(store_id, ShufersalCategories.PromosFull.value)
     bs_promos = create_bs_object(xml_file_gen(ShufersalCategories.PromosFull.name, store_id), down_url)
 
-    promos_objs = list()
-    time_now = datetime.now()
-    for promo in bs_promos.find_all("Promotion"):
-        promo_end_date = datetime.strptime(promo.find('PromotionEndDate').text, '%Y-%m-%d')
-        if promo_end_date > time_now:  # If promo not expired
-            promo_content = promo.find('PromotionDescription').text
-            if not any(product in promo_content for product in PRODUCTS_TO_IGNORE):
-                promo_update_date = datetime.strptime(promo.find('PromotionUpdateDate').text, '%Y-%m-%d %H:%M')
-                items_in_promo = [items_dict.get(item.find('ItemCode').text) for item in promo.find_all('Item')
-                                  if items_dict.get(item.find('ItemCode').text)]
-                if items_in_promo:
-                    promos_objs.append(Promotion(promo_content, promo_end_date, promo_update_date, items_in_promo))
+    promo_objs = list()
+    for cur_promo in bs_promos.find_all("Promotion"):
+        cur_promo = Promotion(
+            content=cur_promo.find('PromotionDescription').text,
+            end_date=datetime.strptime(cur_promo.find('PromotionEndDate').text, '%Y-%m-%d'),
+            update_date=datetime.strptime(cur_promo.find('PromotionUpdateDate').text, '%Y-%m-%d %H:%M'),
+            code_items=[items_dict.get(item.find('ItemCode').text) for item in cur_promo.find_all('Item')
+                        if items_dict.get(item.find('ItemCode').text)],
+        )
+        if is_valid_promo(cur_promo):
+            promo_objs.append(cur_promo)
+    print(f"Finished getting available promos in {time.time() - start}")
+    return promo_objs
 
-    return promos_objs
+
+def is_valid_promo(promo: Promotion):
+    not_expired = promo.end_date > datetime.now()
+    has_products = len(promo.code_items) > 0
+    return not_expired and has_products and not any(product in promo.content for product in PRODUCTS_TO_IGNORE)
 
 
 def create_items_dict(store_id: int, load_xml) -> Dict:
@@ -139,7 +146,7 @@ def main_latest_promos(store_id: int, load_xml: bool):
     """
 
     promotions = get_available_promos(store_id, load_xml)
-    promotions.sort(key=lambda promo: promo.promo_update_date, reverse=True)
+    promotions.sort(key=lambda promo: promo.update_date, reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))
 
 
