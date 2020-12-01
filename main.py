@@ -44,7 +44,7 @@ class Promotion:
 
     def __str__(self):
         items = '\n'.join(str(item) for item in self.code_items)
-        return f"*** {self.content} until {self.end_date.date()} ***\n{items}\n"
+        return f"*** {self.content} until {self.end_date.date()} update in {self.update_date} ***\n{items}\n"
 
 
 def get_download_url(store_id: int, cat_id: int) -> str:
