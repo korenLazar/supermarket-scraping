@@ -3,8 +3,8 @@
 ## Installation
 clone:
 ```cmd script
-git clone https://github.cs.huji.ac.il/danieljannai/cryptocurrencies-project
-cd cryptocurrencies-project
+git clone https://github.com/korenLazar/shufersal-scraping.git
+cd shufersal-scraping
 virtualenv venv
 venv\bin\activate
 pip install -r requirements.txt
