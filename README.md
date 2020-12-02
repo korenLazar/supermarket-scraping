@@ -2,11 +2,11 @@
 
 ## Installation
 clone:
-```shell script
+```cmd script
 git clone https://github.cs.huji.ac.il/danieljannai/cryptocurrencies-project
 cd cryptocurrencies-project
 virtualenv venv
-source venv/bin/activate
+venv\bin\activate
 pip install -r requirements.txt
 ```
 
@@ -23,20 +23,20 @@ in spite of the blockchain being full.
 
 ## Usage
 First, to find your store's id, you can run the following command (assuming you live in Jerusalem):
-```shell script
+```cmd script
 python main.py --find_store ירושלים
 ```
 After running the command, you'll be able to see the different stores in Jerusalem with their ids in "stores_ירושלים.log".
 
 Now, that we have the store's id, we can get its promotions sorted by their update date by running:
-```shell script
+```cmd script
 python main.py --promos 5
 ```
 * We assumed that the store's id is 5.
 Now, you can find the promos in promos_5.log.
 
 For other documentation and commands, you can run 
-```shell script
+```cmd script
 python main.py --h
 ```
 
