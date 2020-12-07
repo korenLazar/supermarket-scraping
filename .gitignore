@@ -1,0 +1,9 @@
+promos*
+Prices*
+products_prices.log
+.idea/
+Stores.xml
+grading_check.py
+stores_*
+venv/
+__pycache__/
