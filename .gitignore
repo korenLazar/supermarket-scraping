@@ -7,3 +7,4 @@ grading_check.py
 stores_*
 venv/
 __pycache__/
+xmls/

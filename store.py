@@ -1,6 +1,11 @@
 from argparse import ArgumentTypeError
 
-from utils import ShufersalCategories, create_bs_object, get_download_url, is_valid_store_id, xml_file_gen
+from utils import (
+    ShufersalCategories,
+    is_valid_store_id,
+    xml_file_gen,
+    create_bs_object,
+)
 
 
 def store_id_type(store_id: str):
@@ -9,17 +14,17 @@ def store_id_type(store_id: str):
     return store_id
 
 
-def get_store_id(city: str, load_xml: bool, logger):
+def get_store_id(city: str, load_xml: bool):
     """
-    This function returns the id of a Shufersal store according to a given city.
-    The city must match exactly to its spelling in Shufersal's website.
+    This function prints the store_ids of Shufersal stores in a given city.
+    The city must match exactly to its spelling in Shufersal's website (hence it should be in Hebrew alphabet).
 
     :param load_xml: A boolean representing whether to load an existing xml or load an already saved one
     :param city: A string representing the city of the requested store.
     """
-    down_url = "" if load_xml else get_download_url(-1, ShufersalCategories.Stores.value)
-    bs = create_bs_object(xml_file_gen(ShufersalCategories.Stores.name, -1), down_url)
+    xml_path = xml_file_gen(ShufersalCategories.Stores.name, -1)
+    bs_stores = create_bs_object(xml_path, ShufersalCategories.Stores.value, -1, load_xml)
 
-    for store in bs.find_all("STORE"):
+    for store in bs_stores.find_all("STORE"):
         if store.find("CITY").text == city:
-            logger.info((store.find("ADDRESS").text, store.find("STOREID").text, store.find("SUBCHAINNAME").text))
+            print((store.find("ADDRESS").text[::-1], store.find("STOREID").text, store.find("SUBCHAINNAME").text[::-1]))

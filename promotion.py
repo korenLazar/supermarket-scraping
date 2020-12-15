@@ -1,6 +1,11 @@
 from datetime import datetime
 from typing import List
-from utils import ShufersalCategories, create_bs_object, create_items_dict, get_download_url, xml_file_gen
+from utils import (
+    ShufersalCategories,
+    create_items_dict,
+    xml_file_gen,
+    create_bs_object,
+)
 
 PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'צלחות', 'כוסות', 'מאגים', 'מגבת', 'מפות', 'פסטיגל']
 
@@ -36,9 +41,8 @@ def get_available_promos(store_id: int, load_xml: bool) -> List[Promotion]:
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
     items_dict = create_items_dict(store_id, load_xml)
-
-    down_url = get_download_url(store_id, ShufersalCategories.PromosFull.value)
-    bs_promos = create_bs_object(xml_file_gen(ShufersalCategories.PromosFull.name, store_id), down_url)
+    xml_path = xml_file_gen(ShufersalCategories.PromosFull.name, store_id)
+    bs_promos = create_bs_object(xml_path, ShufersalCategories.PromosFull.value, store_id, False)
 
     promo_objs = list()
     for cur_promo in bs_promos.find_all("Promotion"):
@@ -66,10 +70,11 @@ def is_valid_promo(promo: Promotion):
 
 def main_latest_promos(store_id: int, load_xml: bool, logger):
     """
-    This function logs the available promos in a Shufersal store with a given id sorted by their update date.
+    This function logs the available promos in a  store with a given id sorted by their update date.
 
     :param store_id: A given store id
     :param load_xml: A boolean representing whether to load an existing prices xml file
+    :param logger: A given logger
     """
 
     promotions = get_available_promos(store_id, load_xml)
