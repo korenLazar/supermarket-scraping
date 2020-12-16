@@ -16,19 +16,18 @@ class Promotion:
     It contains only part of the available information in Shufersal's data.
     """
 
-    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime,
-                 code_items: List[str]):
+    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[str]):
         self.content: str = content
         self.start_date = start_date
         self.end_date: datetime = end_date
         self.update_date: datetime = update_date
-        self.code_items: List[str] = code_items
+        self.items: List[str] = items
 
     def __str__(self):
         title = self.content
         dates_range = f"Between {self.start_date.date()} and {self.end_date.date()}"
         update_line = f"Updated at {self.update_date.date()}"
-        items = '\n'.join(str(item) for item in self.code_items)
+        items = '\n'.join(str(item) for item in self.items)
         return '\n'.join([title, dates_range, update_line, items]) + '\n'
 
 
@@ -51,8 +50,8 @@ def get_available_promos(store_id: int, load_xml: bool) -> List[Promotion]:
             start_date=datetime.strptime(cur_promo.find('PromotionStartDate').text, '%Y-%m-%d'),
             end_date=datetime.strptime(cur_promo.find('PromotionEndDate').text, '%Y-%m-%d'),
             update_date=datetime.strptime(cur_promo.find('PromotionUpdateDate').text, '%Y-%m-%d %H:%M'),
-            code_items=[items_dict.get(item.find('ItemCode').text) for item in cur_promo.find_all('Item')
-                        if items_dict.get(item.find('ItemCode').text)],
+            items=[items_dict.get(item.find('ItemCode').text) for item in cur_promo.find_all('Item')
+                   if items_dict.get(item.find('ItemCode').text)],
         )
         if is_valid_promo(cur_promo):
             promo_objs.append(cur_promo)
@@ -63,7 +62,7 @@ def is_valid_promo(promo: Promotion):
     today_date = datetime.now()
     not_expired = promo.end_date.date() >= today_date.date()
     has_started = promo.start_date <= today_date
-    has_products = len(promo.code_items) > 0
+    has_products = len(promo.items) > 0
     in_promo_ignore_list = any(product in promo.content for product in PRODUCTS_TO_IGNORE)
     return not_expired and has_started and has_products and not in_promo_ignore_list
 
@@ -80,3 +79,10 @@ def main_latest_promos(store_id: int, load_xml: bool, logger):
     promotions = get_available_promos(store_id, load_xml)
     promotions.sort(key=lambda promo: max(promo.update_date, promo.start_date), reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))
+
+
+def get_promos_by_name(store_id: int, load_xml: bool, promo_name: str):
+    promotions = get_available_promos(store_id, load_xml)
+    for promo in promotions:
+        if promo_name in promo.content:
+            print(str(promo))

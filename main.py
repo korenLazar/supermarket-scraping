@@ -1,9 +1,11 @@
 from argparse import ArgumentParser
 import logging
-from promotion import main_latest_promos
+from promotion import main_latest_promos, get_promos_by_name
 from store import get_store_id, store_id_type
 from utils import get_products_prices
 
+# TODO: improve extendability: support addition of different supermarket chains
+# TODO: fix problem of left-to-right printing in Windows' cmd
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -12,6 +14,12 @@ if __name__ == '__main__':
                         metavar='store_id',
                         nargs=1,
                         type=store_id_type,
+                        )
+    parser.add_argument('--find_promos_by_name',
+                        help="prints all promos containing the given promo_name in the given store",
+                        metavar=('store_id', 'promo_name'),
+                        nargs=2,
+                        # type=store_id_type,  # TODO: add type-checking of first parameter
                         )
     parser.add_argument('--price',
                         help='prints all products that contain the given name in the requested store',
@@ -46,3 +54,7 @@ if __name__ == '__main__':
     elif args.find_store_id:
         arg_city = args.find_store_id[0]
         get_store_id(city=arg_city, load_xml=args.load_xml)
+
+    elif args.find_promos_by_name:
+        arg_store_id = int(args.find_promos_by_name[0])
+        get_promos_by_name(store_id=arg_store_id, load_xml=args.load_xml, promo_name=args.find_promos_by_name[1])
