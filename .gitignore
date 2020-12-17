@@ -8,3 +8,4 @@ stores_*
 venv/
 __pycache__/
 xmls/
+logs/
