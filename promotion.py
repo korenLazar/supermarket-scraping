@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Dict, List
-from bs4 import BeautifulSoup
 
 from utils import (
     create_items_dict,
@@ -33,11 +32,14 @@ class Promotion:
         return '\n'.join([title, dates_range, update_line, items]) + '\n'
 
     def repr_ltr(self):
-        title = self.content[::-1]
+        title = self.content
         dates_range = f"Between {self.start_date} and {self.end_date}"
         update_line = f"Updated at {self.update_date}"
-        items = '\n'.join(str(item)[::-1] for item in self.items)
+        items = '\n'.join(str(item) for item in self.items)
         return '\n'.join([title, dates_range, update_line, items]) + '\n'
+
+    def __eq__(self, other):
+        return self.content == other.content and self.start_date == other.start_date and self.end_date == other.end_date
 
 
 def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos) -> List[Promotion]:
@@ -67,7 +69,10 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
             items=chain.get_items(promo, items_dict),
         )
         if is_valid_promo(promo):
-            promo_objs.append(promo)
+            if promo_objs and promo_objs[-1] == promo:  # Merge equal promos
+                promo_objs[-1].items.extend(promo.items)
+            else:
+                promo_objs.append(promo)
     return promo_objs
 
 
@@ -97,7 +102,7 @@ def main_latest_promos(store_id: int, load_xml: bool, logger, chain: Supermarket
     """
 
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, False)
-    promotions.sort(key=lambda promo: max(promo.update_date, promo.start_date), reverse=True)
+    promotions.sort(key=lambda promo: (max(promo.update_date, promo.start_date), promo.start_date), reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))
 
 
@@ -115,3 +120,15 @@ def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
     for promo in promotions:
         if promo_name in promo.content:
             print(promo.repr_ltr())
+
+
+def get_all_null_items_in_promos(chain, store_id):
+    items_dict: Dict[str, str] = create_items_dict(chain, True, store_id)
+    xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PromosFull.name)
+    bs_promos = create_bs_object(xml_path, chain, store_id, True, chain.XMLFilesCategory.PromosFull)
+
+    null_items = list()
+    for promo in bs_promos.find_all(chain.promotion_tag_name):
+        null_items.extend(chain.get_null_items(promo, items_dict))
+
+    return null_items

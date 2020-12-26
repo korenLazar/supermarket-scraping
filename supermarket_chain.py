@@ -9,6 +9,8 @@ class SupermarketChain:
     """
     A class representing a supermarket chain.
     """
+
+    @abstractmethod
     class XMLFilesCategory(Enum):
         """
         An enum class of different XML files produced by a supermarket chain
@@ -77,4 +79,13 @@ class SupermarketChain:
         :param promo: A given promo
         :param items_dict: A given dictionary of products
         """
+        pass
+
+    @staticmethod
+    def get_null_items(promo: Tag, items_dict: Dict[str, str]) -> List[str]:
+        return [item.find('ItemCode').text for item in promo.find_all('Item')
+                if not items_dict.get(item.find('ItemCode').text)]
+
+    @abstractmethod
+    def __repr__(self):
         pass

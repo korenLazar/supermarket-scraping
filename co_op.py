@@ -19,7 +19,7 @@ class CoOp(SupermarketChain):
         req_res: requests.Response = requests.get(url)
         soup = BeautifulSoup(req_res.text, features='lxml')
         suffix: str = soup.find('a', href=lambda value: value and category.name.replace('s', '') in value
-                                and f'-{store_id}-20' in value).attrs['href']
+                                and f'-{store_id:03d}-20' in value).attrs['href']
         down_url = prefix + suffix
         print(down_url)
         return down_url

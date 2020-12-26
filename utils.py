@@ -1,5 +1,7 @@
 import gzip
-from typing import AnyStr, Dict
+import io
+import zipfile
+from typing import AnyStr, Dict, List
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -57,7 +59,14 @@ def create_bs_object_from_link(xml_path: str, chain: SupermarketChain, category:
     :return: A BeautifulSoup object with xml content.
     """
     download_url: str = chain.get_download_url(store_id, category)
-    xml_content: AnyStr = gzip.decompress(requests.get(download_url).content)
+    response_content = requests.get(download_url).content
+    try:
+        xml_content: AnyStr = gzip.decompress(response_content)
+    except gzip.BadGzipFile:
+        with zipfile.ZipFile(io.BytesIO(response_content)) as the_zip:
+            zip_info = the_zip.infolist()[0]
+            with the_zip.open(zip_info) as the_file:
+                xml_content = the_file.read()
     with open(xml_path, 'wb') as f_out:
         f_out.write(xml_content)
     return BeautifulSoup(xml_content, features='xml')
@@ -88,12 +97,12 @@ def create_items_dict(chain: SupermarketChain, load_xml, store_id: int) -> Dict[
     return {item.find('ItemCode').text: get_item_info(item) for item in bs_prices.find_all(chain.item_tag_name)}
 
 
-def get_item_info(item: Tag) -> str:
+def get_item_info(item: Tag) -> List[str]:
     """
     This function returns a string containing important information about a given supermarket's product.
     """
-    return [item.find('ItemName').text, item.find(re.compile(r'Manufacture[r]?Name')).text,
-                item.find('ItemPrice').text, item.find('ItemCode').text]
+    return [item.find(re.compile(r'ItemN[a]?m[e]?')).text, item.find(re.compile(r'Manufacture[r]?Name')).text,
+            item.find('ItemPrice').text, item.find('ItemCode').text]
 
 
 def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, product_name: str) -> None:
