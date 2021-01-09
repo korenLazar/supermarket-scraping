@@ -102,7 +102,8 @@ def main_latest_promos(store_id: int, load_xml: bool, logger, chain: Supermarket
     """
 
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, False)
-    promotions.sort(key=lambda promo: (max(promo.update_date, promo.start_date), promo.start_date), reverse=True)
+    promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
+                                       promo.end_date), reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))
 
 
