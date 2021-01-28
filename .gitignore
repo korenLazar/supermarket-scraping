@@ -1,11 +1,8 @@
-promos*
-Prices*
-products_prices.log
 .idea/
-Stores.xml
 grading_check.py
-stores_*
 venv/
 __pycache__/
-xmls/
-logs/
+raw_files/
+results/
+all_deals.py
+unknown_items.csv

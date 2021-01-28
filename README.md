@@ -1,4 +1,5 @@
 # Supermarket basic scraping
+The library supports scraping from Shufersal, Co-Op and Zol Vebegadol
 
 ## Installation
 clone:
@@ -20,18 +21,24 @@ First, to find your Shufersal store's ID, you can run the following command (ass
 ```cmd script
 python main.py --find_store ירושלים --chain Shufersal
 ```
-After running the command, you'll be able to see the different stores in Jerusalem with their IDs on the screen.
+In case you want a different supermarket chain, just change 'Shufersal' to a different name (the options will be
+ printed in case of misspelling).
 
-Now, that we have the store's ID, we can get its promotions sorted by their update date by running
+After running the command, you'll be able to see the different stores in Jerusalem with their IDs in "results\Shufersal-Stores.xml".
+
+Now, that we have the store's ID, we can get the store's relevant promotions sorted by their start date, last update
+, and length.
 ```cmd script
 python main.py --promos 5 --chain Shufersal
 ```
 * We assumed that the store's ID is 5.
-Now, you can find the promos in "promos_5.log".
+Now, you can find the promos in "results\Shufersal_promos_5.log".
 
 For other documentation and commands, you can run 
 ```cmd script
 python main.py --h
 ```
+
+Any file that was downloaded in the process will be located in the "raw_files" directory.
 
 Good luck!
