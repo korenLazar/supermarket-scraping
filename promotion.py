@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Dict, List
+import csv
 
+from item import Item
 from utils import (
     create_items_dict,
     xml_file_gen,
@@ -17,12 +19,13 @@ class Promotion:
     It contains only part of the available information in Shufersal's data.
     """
 
-    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[str]):
+    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime,
+                 items: List[Item]):
         self.content: str = content
-        self.start_date = start_date
+        self.start_date: datetime = start_date
         self.end_date: datetime = end_date
         self.update_date: datetime = update_date
-        self.items: List[str] = items
+        self.items: List[Item] = items
 
     def __repr__(self):
         title = self.content
@@ -42,6 +45,40 @@ class Promotion:
         return self.content == other.content and self.start_date == other.start_date and self.end_date == other.end_date
 
 
+def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -> None:
+    """
+    This function writes a given list of promotions to a given output file in a CSV format.
+
+    :param promotions: A given list of promotions
+    :param output_filename: A given file to write to
+    """
+    with open(output_filename, mode='w', newline='') as f_out:
+        promos_writer = csv.writer(f_out)
+        promos_writer.writerow([
+            'תיאור המבצע',
+            'הפריט המשתתף במבצע',
+            'מחיר לפני המבצע',
+            'זמן תחילת המבצע',
+            'זמן סיום המבצע',
+            'זמן עדכון אחרון',
+            'יצרן',
+            'ברקוד של הפריט'
+        ])
+
+        for promo in promotions:
+            promos_writer.writerows(
+                [[promo.content,
+                  item.name,
+                  item.price,
+                  promo.start_date,
+                  promo.end_date,
+                  promo.update_date,
+                  item.manufacturer,
+                  item.code]
+                 for item in promo.items]
+            )
+
+
 def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos) -> List[Promotion]:
     """
     This function return the available promotions given a BeautifulSoup object.
@@ -52,7 +89,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
     :param load_prices: A boolean representing whether to load an existing xml or load an already saved one
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
-    items_dict: Dict[str, str] = create_items_dict(chain, load_prices, store_id)
+    items_dict: Dict[str, Item] = create_items_dict(chain, load_prices, store_id)
     xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PromosFull.name)
     bs_promos = create_bs_object(xml_path, chain, store_id, load_promos, chain.XMLFilesCategory.PromosFull)
 
@@ -78,10 +115,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
 
 def is_valid_promo(promo: Promotion):
     """
-    This function checks if a given promo object is valid.
-
-    :param promo: A given promotion
-    :return: True iff the given Promotion is valid.
+    This function returns whether a given Promotion object is currently valid.
     """
     today_date: datetime = datetime.now()
     not_expired: bool = promo.end_date >= today_date
@@ -93,7 +127,7 @@ def is_valid_promo(promo: Promotion):
 
 def main_latest_promos(store_id: int, load_xml: bool, logger, chain: SupermarketChain):
     """
-    This function logs the available promos in a  store with a given id sorted by their update date.
+    This function logs the available promotions in a store with a given id sorted by their update date.
 
     :param chain: The name of the requested supermarket chain
     :param store_id: A given store id
@@ -105,6 +139,7 @@ def main_latest_promos(store_id: int, load_xml: bool, logger, chain: Supermarket
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))
+    write_promotions_to_csv(promotions, f'results/{chain}_promos_{store_id}.csv')
 
 
 def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):
@@ -124,7 +159,10 @@ def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
 
 
 def get_all_null_items_in_promos(chain, store_id):
-    items_dict: Dict[str, str] = create_items_dict(chain, True, store_id)
+    """
+    This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
+    """
+    items_dict: Dict[str, Item] = create_items_dict(chain, True, store_id)
     xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PromosFull.name)
     bs_promos = create_bs_object(xml_path, chain, store_id, True, chain.XMLFilesCategory.PromosFull)
 

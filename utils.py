@@ -1,11 +1,13 @@
 import gzip
 import io
 import zipfile
-from typing import AnyStr, Dict, List
+from typing import AnyStr, Dict
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from os import path
+
+from item import Item
 from supermarket_chain import SupermarketChain
 import re
 
@@ -83,26 +85,29 @@ def create_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
         return BeautifulSoup(f_in, features='xml')
 
 
-def create_items_dict(chain: SupermarketChain, load_xml, store_id: int) -> Dict[str, str]:
+def create_items_dict(chain: SupermarketChain, load_xml, store_id: int) -> Dict[str, Item]:
     """
-    This function creates a dictionary where every key is an item code and its value is the item's name and price.
+    This function creates a dictionary where every key is an item code and its value is its corresponding Item instance.
 
     :param chain: A given supermarket chain
     :param load_xml: A boolean representing whether to load an existing prices xml file
     :param store_id: A given store id
-    :return: A dictionary where the firs
     """
     xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PricesFull.name)
     bs_prices: BeautifulSoup = create_bs_object(xml_path, chain, store_id, load_xml, chain.XMLFilesCategory.PricesFull)
     return {item.find('ItemCode').text: get_item_info(item) for item in bs_prices.find_all(chain.item_tag_name)}
 
 
-def get_item_info(item: Tag) -> List[str]:
+def get_item_info(item: Tag) -> Item:
     """
     This function returns a string containing important information about a given supermarket's product.
     """
-    return [item.find(re.compile(r'ItemN[a]?m[e]?')).text, item.find(re.compile(r'Manufacture[r]?Name')).text,
-            item.find('ItemPrice').text, item.find('ItemCode').text]
+    return Item(
+        name=item.find(re.compile(r'ItemN[a]?m[e]?')).text,
+        price=item.find('ItemPrice').text,
+        manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text,
+        code=item.find('ItemCode').text
+    )
 
 
 def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, product_name: str) -> None:

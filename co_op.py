@@ -2,6 +2,8 @@ from typing import Dict, List
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
+
+from item import Item
 from supermarket_chain import SupermarketChain
 
 
@@ -31,6 +33,6 @@ class CoOp(SupermarketChain):
         return 'Co-Op'
 
     @staticmethod
-    def get_items(promo: Tag, items_dict: Dict[str, str]) -> List[str]:
+    def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:
         promo_item = items_dict.get(promo.find('ItemCode').text)
         return [promo_item] if promo_item else []

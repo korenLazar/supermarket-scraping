@@ -2,6 +2,8 @@ from typing import Dict, List
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
+
+from item import Item
 from supermarket_chain import SupermarketChain
 
 
@@ -30,7 +32,7 @@ class ShuferSal(SupermarketChain):
         return 'Shufersal'
 
     @staticmethod
-    def get_items(promo: Tag, items_dict: Dict[str, str]) -> List[str]:
+    def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:
         items = list()
         for item in promo.find_all('Item'):
             item_code = item.find('ItemCode').text

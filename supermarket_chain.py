@@ -4,6 +4,8 @@ from argparse import ArgumentTypeError
 from typing import Dict, List
 from bs4.element import Tag
 
+from item import Item
+
 
 class SupermarketChain:
     """
@@ -72,17 +74,20 @@ class SupermarketChain:
 
     @staticmethod
     @abstractmethod
-    def get_items(promo: Tag, items_dict: Dict[str, str]) -> List[str]:
+    def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:
         """
-        This method returns a list of the items that participate in a given promo
+        This method returns a list of the items that participate in a given promotion.
 
-        :param promo: A given promo
+        :param promo: A given promotion
         :param items_dict: A given dictionary of products
         """
         pass
 
     @staticmethod
-    def get_null_items(promo: Tag, items_dict: Dict[str, str]) -> List[str]:
+    def get_null_items(promo: Tag, items_dict: Dict[str, Item]) -> List[str]:
+        """
+        This function returns all the items in a given promotion which do not appear in the given items_dict.
+        """
         return [item.find('ItemCode').text for item in promo.find_all('Item')
                 if not items_dict.get(item.find('ItemCode').text)]
 
