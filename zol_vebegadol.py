@@ -5,9 +5,6 @@ from supermarket_chain import SupermarketChain
 
 
 class ZolVebegadol(SupermarketChain):
-    def __repr__(self):
-        return 'Zol-Vebegadol'
-
     _date_hour_format = '%Y-%m-%d %H:%M:%S'
     _update_date_format = '%Y-%m-%d %H:%M:%S'
     item_tag_name = 'Item'

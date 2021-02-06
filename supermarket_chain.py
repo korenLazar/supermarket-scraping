@@ -10,7 +10,12 @@ from bs4.element import Tag
 from item import Item
 
 
-class SupermarketChain:
+class Meta(type):
+    def __repr__(cls):
+        return cls.__name__
+
+
+class SupermarketChain(object, metaclass=Meta):
     """
     A class representing a supermarket chain.
     """
@@ -122,6 +127,7 @@ class SupermarketChain:
             code=item.find('ItemCode').text
         )
 
+    @classmethod
     @abstractmethod
-    def __repr__(self):
+    def __repr__(cls):
         pass

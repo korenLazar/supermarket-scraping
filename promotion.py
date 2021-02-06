@@ -140,7 +140,7 @@ def main_latest_promos(store_id: int, load_xml: bool, logger, chain: Supermarket
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))
-    write_promotions_to_csv(promotions, f'results/{chain}_promos_{store_id}.csv')
+    write_promotions_to_csv(promotions, f'results/{repr(type(chain))}_promos_{store_id}.csv')
 
 
 def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):

@@ -16,6 +16,3 @@ class ShuferSal(SupermarketChain):
         down_url: str = soup.find('a', text="לחץ להורדה")['href']
         print(down_url)
         return down_url
-
-    def __repr__(self):
-        return 'Shufersal'

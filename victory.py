@@ -1,5 +1,5 @@
 from mahsaneiHashook import MahsaneiHashook
 
 
-class CoOp(MahsaneiHashook):
+class Victory(MahsaneiHashook):
     pass

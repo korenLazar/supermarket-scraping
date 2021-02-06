@@ -24,7 +24,7 @@ def xml_file_gen(chain: SupermarketChain, store_id: int, category_name: str) -> 
     :return: An xml filename
     """
     store_id_str: str = f"-{str(store_id)}" if SupermarketChain.is_valid_store_id(store_id) else ""
-    return path.join(RAW_FILES_DIRNAME, f"{chain}-{category_name}{store_id_str}.xml")
+    return path.join(RAW_FILES_DIRNAME, f"{repr(type(chain))}-{category_name}{store_id_str}.xml")
 
 
 def create_bs_object(xml_path: str, chain: SupermarketChain, store_id: int, load_xml: bool,
