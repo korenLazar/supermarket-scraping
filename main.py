@@ -7,6 +7,7 @@ from supermarket_chain import SupermarketChain
 from shufersal import ShuferSal
 from co_op import CoOp
 from zol_vebegadol import ZolVebegadol
+from rami_levi import RamiLevi
 from pathlib import Path
 
 # TODO: fix problem of left-to-right printing
@@ -16,8 +17,9 @@ Path(RAW_FILES_DIRNAME).mkdir(exist_ok=True)
 
 chain_dict = {
     'Shufersal': ShuferSal(),
-    'Co-Op': CoOp(),
-    'Zol-Vebegadol': ZolVebegadol()
+    'CoOp': CoOp(),
+    'Zol-Vebegadol': ZolVebegadol(),
+    'RamiLevi': RamiLevi(),
 }
 
 if __name__ == '__main__':
@@ -75,7 +77,8 @@ if __name__ == '__main__':
         handler = logging.FileHandler(filename=f'{RESULTS_DIRNAME}/{args.chain}_promos_{arg_store_id}.log', mode='w',
                                       encoding='utf-8')
         logger.addHandler(handler)
-        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, logger=logger, chain=chain)
+        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, logger=logger, chain=chain,
+                           load_promos=args.load_promos)
 
     elif args.price:
         get_products_prices(chain, store_id=args.price[0], load_xml=args.load_prices, product_name=args.price[1])

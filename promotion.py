@@ -10,7 +10,7 @@ from utils import (
 )
 from supermarket_chain import SupermarketChain
 
-PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'צלחות', 'כוסות', 'מאגים', 'מגבת', 'מפות', 'פסטיגל']
+PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'מגבת', 'מפות', 'פסטיגל', 'ביגי']
 
 
 class Promotion:
@@ -102,7 +102,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
                 chain.date_hour_format),
             end_date=datetime.strptime(promo.find(
                 'PromotionEndDate').text + ' ' + promo.find('PromotionEndHour').text, chain.date_hour_format),
-            update_date=datetime.strptime(promo.find(chain.promotion_update_tag_name).text, chain.date_hour_format),
+            update_date=datetime.strptime(promo.find(chain.promotion_update_tag_name).text, chain.update_date_format),
             items=chain.get_items(promo, items_dict),
         )
         if is_valid_promo(promo):
@@ -125,7 +125,7 @@ def is_valid_promo(promo: Promotion):
     return not_expired and has_started and has_products and not in_promo_ignore_list
 
 
-def main_latest_promos(store_id: int, load_xml: bool, logger, chain: SupermarketChain):
+def main_latest_promos(store_id: int, load_xml: bool, logger, chain: SupermarketChain, load_promos: bool):
     """
     This function logs the available promotions in a store with a given id sorted by their update date.
 
@@ -135,7 +135,7 @@ def main_latest_promos(store_id: int, load_xml: bool, logger, chain: Supermarket
     :param logger: A given logger
     """
 
-    promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, False)
+    promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
     logger.info('\n'.join(str(promotion) for promotion in promotions))

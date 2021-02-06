@@ -4,12 +4,10 @@ import zipfile
 from typing import AnyStr, Dict
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import Tag
 from os import path
 
 from item import Item
 from supermarket_chain import SupermarketChain
-import re
 
 RESULTS_DIRNAME = "results"
 RAW_FILES_DIRNAME = "raw_files"
@@ -60,8 +58,9 @@ def create_bs_object_from_link(xml_path: str, chain: SupermarketChain, category:
     :param category: A given category
     :return: A BeautifulSoup object with xml content.
     """
-    download_url: str = chain.get_download_url(store_id, category)
-    response_content = requests.get(download_url).content
+    session = requests.Session()
+    download_url: str = chain.get_download_url(store_id, category, session)
+    response_content = session.get(download_url).content
     try:
         xml_content: AnyStr = gzip.decompress(response_content)
     except gzip.BadGzipFile:
@@ -95,19 +94,7 @@ def create_items_dict(chain: SupermarketChain, load_xml, store_id: int) -> Dict[
     """
     xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PricesFull.name)
     bs_prices: BeautifulSoup = create_bs_object(xml_path, chain, store_id, load_xml, chain.XMLFilesCategory.PricesFull)
-    return {item.find('ItemCode').text: get_item_info(item) for item in bs_prices.find_all(chain.item_tag_name)}
-
-
-def get_item_info(item: Tag) -> Item:
-    """
-    This function returns a string containing important information about a given supermarket's product.
-    """
-    return Item(
-        name=item.find(re.compile(r'ItemN[a]?m[e]?')).text,
-        price=item.find('ItemPrice').text,
-        manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text,
-        code=item.find('ItemCode').text
-    )
+    return {item.find('ItemCode').text: chain.get_item_info(item) for item in bs_prices.find_all(chain.item_tag_name)}
 
 
 def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, product_name: str) -> None:
@@ -124,5 +111,10 @@ def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, 
     prods = [item for item in bs_prices.find_all("Item") if product_name in item.find("ItemName").text]
     prods.sort(key=lambda x: float(x.find("UnitOfMeasurePrice").text))
     for prod in prods:
-        print((prod.find('ItemName').text[::-1], prod.find('ManufacturerName').text[::-1],
-               prod.find('ItemPrice').text))
+        print(
+            (
+                prod.find('ItemName').text[::-1],
+                prod.find('ManufacturerName').text[::-1],
+                prod.find('ItemPrice').text
+            )
+        )

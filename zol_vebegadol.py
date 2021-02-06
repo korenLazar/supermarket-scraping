@@ -20,8 +20,12 @@ class ZolVebegadol(SupermarketChain):
     date_hour_format = '%Y-%m-%d %H:%M:%S'
     item_tag_name = 'Item'
 
+    @property
+    def update_date_format(self):
+        return ZolVebegadol.date_hour_format
+
     @staticmethod
-    def get_download_url(store_id: int, category: SupermarketChain.XMLFilesCategory) -> str:
+    def get_download_url(store_id: int, category: SupermarketChain.XMLFilesCategory, session:requests.Session) -> str:
         prefix = "http://zolvebegadol.binaprojects.com"
         url = prefix + "/MainIO_Hok.aspx"
         req_res: requests.Response = requests.get(url)

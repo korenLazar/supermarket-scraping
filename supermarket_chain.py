@@ -1,7 +1,10 @@
+import re
 from abc import abstractmethod
 from enum import Enum
 from argparse import ArgumentTypeError
 from typing import Dict, List
+
+import requests
 from bs4.element import Tag
 
 from item import Item
@@ -37,6 +40,10 @@ class SupermarketChain:
 
     @property
     @abstractmethod
+    def update_date_format(self): pass
+
+    @property
+    @abstractmethod
     def item_tag_name(self): pass
 
     @staticmethod
@@ -62,10 +69,11 @@ class SupermarketChain:
 
     @staticmethod
     @abstractmethod
-    def get_download_url(store_id: int, category: XMLFilesCategory) -> str:
+    def get_download_url(store_id: int, category: XMLFilesCategory, session: requests.Session) -> str:
         """
         This method scrapes supermarket's website and returns a url containing the data for a given store and category.
 
+        :param session:
         :param store_id: A given id of a store
         :param category: A given category
         :return: A downloadable link of the  data for a given store and category
@@ -90,6 +98,18 @@ class SupermarketChain:
         """
         return [item.find('ItemCode').text for item in promo.find_all('Item')
                 if not items_dict.get(item.find('ItemCode').text)]
+
+    @staticmethod
+    def get_item_info(item: Tag) -> Item:
+        """
+        This function returns a string containing important information about a given supermarket's product.
+        """
+        return Item(
+            name=item.find(re.compile(r'ItemN[a]?m[e]?')).text,
+            price=item.find('ItemPrice').text,
+            manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text,
+            code=item.find('ItemCode').text
+        )
 
     @abstractmethod
     def __repr__(self):

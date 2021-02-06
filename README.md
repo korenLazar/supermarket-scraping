@@ -1,5 +1,5 @@
 # Supermarket basic scraping
-The library supports scraping from Shufersal, Co-Op and Zol Vebegadol.
+The library supports scraping from Shufersal, CoOp and Zol Vebegadol.
 
 ## Installation
 clone:

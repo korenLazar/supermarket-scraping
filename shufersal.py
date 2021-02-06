@@ -14,8 +14,12 @@ class ShuferSal(SupermarketChain):
     date_hour_format = '%Y-%m-%d %H:%M'
     item_tag_name = 'Item'
 
+    @property
+    def update_date_format(self):
+        return ShuferSal.date_hour_format
+
     @staticmethod
-    def get_download_url(store_id: int, category: SupermarketChain.XMLFilesCategory) -> str:
+    def get_download_url(store_id: int, category: SupermarketChain.XMLFilesCategory, session: requests.Session) -> str:
         url = f"http://prices.shufersal.co.il/FileObject/UpdateCategory?catID={category.value}"
         if SupermarketChain.is_valid_store_id(int(store_id)):
             url += f"&storeId={store_id}"
