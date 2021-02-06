@@ -132,6 +132,7 @@ def main_latest_promos(store_id: int, load_xml: bool, logger, chain: Supermarket
     :param chain: The name of the requested supermarket chain
     :param store_id: A given store id
     :param load_xml: A boolean representing whether to load an existing prices xml file
+    :param load_promos: A boolean representing whether to load an existing promos xml file
     :param logger: A given logger
     """
 

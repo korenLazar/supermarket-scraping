@@ -15,36 +15,42 @@ class SupermarketChain:
     A class representing a supermarket chain.
     """
 
-    @abstractmethod
     class XMLFilesCategory(Enum):
         """
         An enum class of different XML files produced by a supermarket chain
         """
-        pass
+        All, Prices, PricesFull, Promos, PromosFull, Stores = range(6)
+
+    _promotion_tag_name = 'Promotion'
+    _promotion_update_tag_name = 'PromotionUpdateDate'
+    _date_format = '%Y-%m-%d'
+    _date_hour_format = '%Y-%m-%d %H:%M'
+    _update_date_format = '%Y-%m-%d %H:%M'
+    _item_tag_name = 'Item'
 
     @property
-    @abstractmethod
-    def promotion_tag_name(self): pass
+    def promotion_tag_name(self):
+        return type(self)._promotion_tag_name
 
     @property
-    @abstractmethod
-    def promotion_update_tag_name(self): pass
+    def promotion_update_tag_name(self):
+        return type(self)._promotion_update_tag_name
 
     @property
-    @abstractmethod
-    def date_format(self): pass
+    def date_format(self):
+        return type(self)._date_format
 
     @property
-    @abstractmethod
-    def date_hour_format(self): pass
+    def date_hour_format(self):
+        return type(self)._date_hour_format
 
     @property
-    @abstractmethod
-    def update_date_format(self): pass
+    def update_date_format(self):
+        return type(self)._update_date_format
 
     @property
-    @abstractmethod
-    def item_tag_name(self): pass
+    def item_tag_name(self):
+        return type(self)._item_tag_name
 
     @staticmethod
     def is_valid_store_id(store_id: int) -> bool:
@@ -81,7 +87,6 @@ class SupermarketChain:
         pass
 
     @staticmethod
-    @abstractmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:
         """
         This method returns a list of the items that participate in a given promotion.
@@ -89,7 +94,13 @@ class SupermarketChain:
         :param promo: A given promotion
         :param items_dict: A given dictionary of products
         """
-        pass
+        items = list()
+        for item in promo.find_all('Item'):
+            item_code = item.find('ItemCode').text
+            full_item_info = items_dict.get(item_code)
+            if full_item_info:
+                items.append(full_item_info)
+        return items
 
     @staticmethod
     def get_null_items(promo: Tag, items_dict: Dict[str, Item]) -> List[str]:
