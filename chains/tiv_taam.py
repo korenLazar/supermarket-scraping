@@ -1,4 +1,4 @@
-from cerberus_web_client import CerberusWebClient
+from chains.cerberus_web_client import CerberusWebClient
 from supermarket_chain import SupermarketChain
 
 

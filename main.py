@@ -1,37 +1,35 @@
 from argparse import ArgumentParser
 import logging
+from pathlib import Path
 
-from bareket import Bareket
-from mahsaneiHashook import MahsaneiHashook
-from dor_alon import DorAlon
-from freshmarket import Freshmarket
-from hazi_hinam import HaziHinam
-from keshet import Keshet
 from promotion import main_latest_promos, get_promos_by_name
-from stop_market import StopMarket
-from store_utils import get_all_deals, get_store_id
-from tiv_taam import TivTaam
+from store_utils import get_store_id
 from utils import RESULTS_DIRNAME, RAW_FILES_DIRNAME, get_products_prices
 from supermarket_chain import SupermarketChain
-from shufersal import ShuferSal
-from co_op import CoOp
-from victory import Victory
-from yohananof import Yohananof
-from zol_vebegadol import ZolVebegadol
-from rami_levi import RamiLevi
-from osher_ad import OsherAd
-from pathlib import Path
+from chains import (
+    bareket,
+    mahsaneiHashook,
+    dor_alon,
+    freshmarket,
+    hazi_hinam,
+    keshet,
+    stop_market,
+    tiv_taam,
+    shufersal,
+    co_op,
+    victory,
+    yohananof,
+    zol_vebegadol,
+    rami_levi,
+    osher_ad,
+)
 
 # TODO: fix problem of left-to-right printing
 
 Path(RESULTS_DIRNAME).mkdir(exist_ok=True)
 Path(RAW_FILES_DIRNAME).mkdir(exist_ok=True)
 
-chains = ShuferSal, CoOp, ZolVebegadol, RamiLevi, OsherAd, Freshmarket, TivTaam, HaziHinam, Keshet, StopMarket, \
-         Yohananof, DorAlon, MahsaneiHashook, Bareket, Victory
-
-chain_dict = {repr(chain): chain() for chain in chains}
-
+chain_dict = {repr(chain): chain() for chain in SupermarketChain.__subclasses__()}
 
 if __name__ == '__main__':
     parser = ArgumentParser()
