@@ -1,5 +1,5 @@
 # Supermarket basic scraping
-The library supports scraping from Shufersal, CoOp and Zol Vebegadol.
+The library supports scraping from Shufersal, CoOp, Rami Levi, Osher Ad, Zol Vebegadol, Tiv Taam, Freshmarket, Mahsanei Hashook, Victory, Maayan2000, Yohananof, Stop Market, Keshet Taamim, Hazi Hinam, Dor Alon supermarkets, Shefa Birkat Hashem, Shuk Hayir, King Store and Super Bareket.
 
 ## Installation
 clone:

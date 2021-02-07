@@ -3,4 +3,4 @@ from supermarket_chain import SupermarketChain
 
 
 class TivTaam(CerberusWebClient, SupermarketChain):
-    _class_name = 'TivTaam'
+    pass

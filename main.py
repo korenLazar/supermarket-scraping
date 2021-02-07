@@ -22,6 +22,10 @@ from chains import (
     zol_vebegadol,
     rami_levi,
     osher_ad,
+    maayan2000,
+    shuk_hayir,
+    king_store,
+    shefa_birkat_hashem,
 )
 
 # TODO: fix problem of left-to-right printing

@@ -1,6 +1,4 @@
 import json
-from abc import abstractmethod
-
 import requests
 
 from supermarket_chain import SupermarketChain
