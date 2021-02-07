@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from supermarket_chain import SupermarketChain
 
 
-class ShuferSal(SupermarketChain):
+class Shufersal(SupermarketChain):
 
     @staticmethod
     def get_download_url(store_id: int, category: SupermarketChain.XMLFilesCategory, session: requests.Session) -> str:

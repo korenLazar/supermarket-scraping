@@ -29,7 +29,7 @@ from chains import (
 Path(RESULTS_DIRNAME).mkdir(exist_ok=True)
 Path(RAW_FILES_DIRNAME).mkdir(exist_ok=True)
 
-chain_dict = {repr(chain): chain() for chain in SupermarketChain.__subclasses__()}
+chain_dict = {repr(chain): chain() if callable(chain) else None for chain in SupermarketChain.__subclasses__()}
 
 if __name__ == '__main__':
     parser = ArgumentParser()

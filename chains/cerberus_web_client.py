@@ -26,6 +26,5 @@ class CerberusWebClient:
         return download_url
 
     @property
-    @abstractmethod
     def username(self):
-        pass
+        return repr(type(self))

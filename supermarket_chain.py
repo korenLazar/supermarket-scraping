@@ -126,8 +126,3 @@ class SupermarketChain(object, metaclass=Meta):
             manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text,
             code=item.find('ItemCode').text
         )
-
-    @classmethod
-    @abstractmethod
-    def __repr__(cls):
-        pass
