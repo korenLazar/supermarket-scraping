@@ -1,4 +1,6 @@
+import re
 from datetime import datetime
+from enum import Enum
 from typing import Dict, List
 import csv
 
@@ -13,19 +15,34 @@ from supermarket_chain import SupermarketChain
 PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'מגבת', 'מפות', 'פסטיגל', 'ביגי']
 
 
+# class ClubID(Enum):
+#     Regular = 'מבצע רגיל'
+#     Club = 'מועדון'
+#     CreditCard = 'כרטיס אשראי'
+#     Other = 'אחר'
+
+class ClubID(Enum):
+    מבצע_רגיל = 0
+    מועדון = 1
+    כרטיס_אשראי = 2
+    אחר = 3
+
+
 class Promotion:
     """
     A class of a promotion in Shufersal.
     It contains only part of the available information in Shufersal's data.
     """
 
-    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime,
-                 items: List[Item]):
+    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[Item],
+                 price_after_promo, club_id):
         self.content: str = content
         self.start_date: datetime = start_date
         self.end_date: datetime = end_date
         self.update_date: datetime = update_date
+        self.price_after_promo = price_after_promo
         self.items: List[Item] = items
+        self.club_id = club_id
 
     def __repr__(self):
         title = self.content
@@ -55,14 +72,17 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
     with open(output_filename, mode='w', newline='') as f_out:
         promos_writer = csv.writer(f_out)
         promos_writer.writerow([
-            'תיאור המבצע',
+            'תיאור מבצע',
             'הפריט המשתתף במבצע',
-            'מחיר לפני המבצע',
-            'זמן תחילת המבצע',
-            'זמן סיום המבצע',
+            'מחיר לפני מבצע',
+            'מחיר אחרי מבצע',
+            'אחוז הנחה',
+            'סוג מבצע',
+            'זמן תחילת מבצע',
+            'זמן סיום מבצע',
             'זמן עדכון אחרון',
             'יצרן',
-            'ברקוד של הפריט'
+            'ברקוד פריט'
         ])
 
         for promo in promotions:
@@ -70,6 +90,9 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
                 [[promo.content,
                   item.name,
                   item.price,
+                  f'{promo.price_after_promo:.3f}',
+                  f'{(float(item.price) - promo.price_after_promo) / float(item.price):.3%}',
+                  promo.club_id.name.replace('_', ' '),
                   promo.start_date,
                   promo.end_date,
                   promo.update_date,
@@ -95,6 +118,14 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
 
     promo_objs = list()
     for promo in bs_promos.find_all(chain.promotion_tag_name):
+        discounted_price = promo.find('DiscountedPrice')
+        min_qty = promo.find('MinQty')
+        # if int(promo.find('IsGiftItem').text):
+        club_id = ClubID(int(promo.find(re.compile(r'ClubI[d|D]')).text))
+        if discounted_price and min_qty:
+            price_after_promo = float(discounted_price.text) / float(min_qty.text)
+        else:
+            price_after_promo = -1
         promo = Promotion(
             content=promo.find('PromotionDescription').text,
             start_date=datetime.strptime(
@@ -102,9 +133,13 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
                 chain.date_hour_format),
             end_date=datetime.strptime(promo.find(
                 'PromotionEndDate').text + ' ' + promo.find('PromotionEndHour').text, chain.date_hour_format),
-            update_date=datetime.strptime(promo.find(chain.promotion_update_tag_name).text, chain.update_date_format),
+            update_date=datetime.strptime(promo.find(chain.promotion_update_tag_name).text,
+                                          chain.update_date_format),
             items=chain.get_items(promo, items_dict),
+            price_after_promo=price_after_promo,
+            club_id=club_id,
         )
+
         if is_valid_promo(promo):
             if promo_objs and promo_objs[-1] == promo:  # Merge equal promos
                 promo_objs[-1].items.extend(promo.items)
