@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-import logging
 from pathlib import Path
 
 from promotion import main_latest_promos, get_promos_by_name
@@ -38,7 +37,7 @@ chain_dict = {repr(chain): chain() if callable(chain) else None for chain in Sup
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--promos',
-                        help="generates a promos_{store_id}.log file with all the promotions in the requested store",
+                        help="generates a CSV file with all the promotions in the requested store",
                         metavar='store_id',
                         nargs=1,
                         type=SupermarketChain.store_id_type,
@@ -55,7 +54,7 @@ if __name__ == '__main__':
                         nargs=2,
                         )
     parser.add_argument('--find_store_id',
-                        help='prints all Shufersal stores within a city. Input should be a name of a city in Hebrew',
+                        help='prints all Shufersal stores in a given city. Input should be a city name in Hebrew',
                         metavar='city',
                         nargs=1,
                         )
@@ -84,14 +83,7 @@ if __name__ == '__main__':
     chain: SupermarketChain = chain_dict[args.chain]
     if args.promos:
         arg_store_id = int(args.promos[0])
-
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(filename=f'{RESULTS_DIRNAME}/{args.chain}_promos_{arg_store_id}.log', mode='w',
-                                      encoding='utf-8')
-        logger.addHandler(handler)
-        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, logger=logger, chain=chain,
-                           load_promos=args.load_promos)
+        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, chain=chain, load_promos=args.load_promos)
 
     elif args.price:
         get_products_prices(chain, store_id=args.price[0], load_xml=args.load_prices, product_name=args.price[1])

@@ -122,7 +122,7 @@ class SupermarketChain(object, metaclass=Meta):
         """
         return Item(
             name=item.find(re.compile(r'ItemN[a]?m[e]?')).text,
-            price=item.find('ItemPrice').text,
+            price=float(item.find('ItemPrice').text),
             manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text,
             code=item.find('ItemCode').text
         )
