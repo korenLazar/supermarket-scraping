@@ -118,3 +118,8 @@ def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, 
                 prod.find('ItemPrice').text
             )
         )
+
+
+def get_float_from_tag(tag, int_tag) -> int:
+    content = tag.find(int_tag)
+    return float(content.text) if content else 0

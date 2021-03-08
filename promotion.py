@@ -1,13 +1,13 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Union
 import csv
 
 from item import Item
 from utils import (
     create_items_dict,
-    xml_file_gen,
+    get_float_from_tag, xml_file_gen,
     create_bs_object,
 )
 from supermarket_chain import SupermarketChain
@@ -16,12 +16,6 @@ INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
 PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'מגבת', 'מפות', 'פסטיגל', 'ביגי']
 
-
-# class ClubID(Enum):
-#     Regular = 'מבצע רגיל'
-#     Club = 'מועדון'
-#     CreditCard = 'כרטיס אשראי'
-#     Other = 'אחר'
 
 class ClubID(Enum):
     מבצע_רגיל = 0
@@ -48,7 +42,7 @@ class Promotion:
     It contains only part of the available information in Shufersal's data.
     """
 
-    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, item: List[Item],
+    def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[Item],
                  promo_func: callable, club_id: ClubID, promotion_id: float, max_qty: int,
                  allow_multiple_discounts: bool, reward_type: RewardType):
         self.content: str = content
@@ -56,25 +50,17 @@ class Promotion:
         self.end_date: datetime = end_date
         self.update_date: datetime = update_date
         self.promo_func: callable = promo_func
-        self.items: List[Item] = item
+        self.items: List[Item] = items
         self.club_id: ClubID = club_id
         self.max_qty: int = max_qty
         self.allow_multiple_discounts = allow_multiple_discounts
         self.reward_type = reward_type
         self.promotion_id = promotion_id
 
-    # def __repr__(self):
-    #     title = self.content
-    #     dates_range = f"Between {self.start_date} and {self.end_date}"
-    #     update_line = f"Updated at {self.update_date}"
-    #     items = '\n'.join(str(item) for item in self.item)
-    #     return '\n'.join([title, dates_range, update_line, items]) + '\n'
-
     def repr_ltr(self):
         title = self.content
         dates_range = f"Between {self.start_date} and {self.end_date}"
         update_line = f"Updated at {self.update_date}"
-        # items = '\n'.join(str(item) for item in self.item)
         return '\n'.join([title, dates_range, update_line, str(self.items)]) + '\n'
 
     def __eq__(self, other):
@@ -97,33 +83,36 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
             'מחיר אחרי מבצע',
             'אחוז הנחה',
             'סוג מבצע',
-            'כמות מקסימלית',
+            'כמות מקס',
             'כפל הנחות',
+            'המבצע החל',
             'זמן תחילת מבצע',
             'זמן סיום מבצע',
             'זמן עדכון אחרון',
             'יצרן',
             'ברקוד פריט',
-            'סוג מבצע',
+            'סוג מבצע לפי תקנות שקיפות מחירים',
         ])
-
         for promo in promotions:
-            promos_writer.writerows(
-                [[promo.content,
-                  item.name,
-                  item.price,
-                  f'{promo.promo_func(item):.3f}',
-                  f'{(item.price - promo.promo_func(item)) / item.price:.3%}',
-                  promo.club_id.name.replace('_', ' '),
-                  promo.max_qty,
-                  promo.allow_multiple_discounts,
-                  promo.start_date,
-                  promo.end_date,
-                  promo.update_date,
-                  item.manufacturer,
-                  item.code,
-                  promo.reward_type.value] for item in promo.items]
-            )
+            promos_writer.writerows([get_promotion_row_in_csv(promo, item) for item in promo.items])
+
+
+def get_promotion_row_in_csv(promo: Promotion, item: Item):
+    return [promo.content,
+            item.name,
+            item.price,
+            f'{promo.promo_func(item):.3f}',
+            f'{(item.price - promo.promo_func(item)) / item.price:.3%}',
+            promo.club_id.name.replace('_', ' '),
+            promo.max_qty,
+            promo.allow_multiple_discounts,
+            promo.start_date <= datetime.now(),
+            promo.start_date,
+            promo.end_date,
+            promo.update_date,
+            item.manufacturer,
+            item.code,
+            promo.reward_type.value]
 
 
 def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos) -> List[Promotion]:
@@ -159,18 +148,14 @@ def create_new_promo_instance(chain, items_dict, promo, promotion_id):
     discounted_price = get_discounted_price(promo)
     promo_description = promo.find('PromotionDescription').text
     is_discount_in_percentage = reward_type == RewardType.DISCOUNT_IN_PERCENTAGE or not discounted_price
-    discount_rate = get_discount_rate(promo, is_discount_in_percentage)
-    min_qty = get_int_from_tag(promo, 'MinQty')
-    max_qty = get_int_from_tag(promo, 'MaxQty')
+    raw_discount_rate = promo.find('DiscountRate').text if promo.find('DiscountRate') else None
+    discount_rate = get_discount_rate(raw_discount_rate, is_discount_in_percentage)
+    min_qty = get_float_from_tag(promo, 'MinQty')
+    max_qty = get_float_from_tag(promo, 'MaxQty')
     remark = promo.find("Remark")
-    promo_func = determine_promo_function(
-        reward_type=reward_type,
-        remark=remark,
-        promo_description=promo_description,
-        discounted_price=discounted_price,
-        discount_rate=discount_rate,
-        min_qty=min_qty,
-    )
+    promo_func = find_promo_function(reward_type=reward_type, remark=remark.text if remark else '',
+                                     promo_description=promo_description, min_qty=min_qty,
+                                     discount_rate=discount_rate, discounted_price=discounted_price)
     promo_start_time = datetime.strptime(promo.find('PromotionStartDate').text + ' ' +
                                          promo.find('PromotionStartHour').text,
                                          chain.date_hour_format)
@@ -183,16 +168,11 @@ def create_new_promo_instance(chain, items_dict, promo, promotion_id):
     multiple_discounts_allowed = bool(int(promo.find('AllowMultipleDiscounts').text))
     items = chain.get_items(promo, items_dict)
 
-    if is_valid_promo(start_time=promo_start_time, end_time=promo_end_time, description=promo_description):
+    if is_valid_promo(end_time=promo_end_time, description=promo_description):
         return Promotion(content=promo_description, start_date=promo_start_time, end_date=promo_end_time,
-                         update_date=promo_update_time, item=items, promo_func=promo_func,
+                         update_date=promo_update_time, items=items, promo_func=promo_func,
                          club_id=club_id, promotion_id=promotion_id, max_qty=max_qty,
                          allow_multiple_discounts=multiple_discounts_allowed, reward_type=reward_type)
-
-
-def get_int_from_tag(tag, int_tag):
-    content = tag.find(int_tag)
-    return int(float(content.text)) if content else 0
 
 
 def get_discounted_price(promo):
@@ -201,60 +181,56 @@ def get_discounted_price(promo):
         return float(discounted_price.text)
 
 
-def get_discount_rate(promo, discount_in_percentage):
-    discount_rate = promo.find("DiscountRate")
+def get_discount_rate(discount_rate: Union[float, None], discount_in_percentage: bool):
     if discount_rate:
         if discount_in_percentage:
-            return int(discount_rate.text) * (10 ** -(len(str(discount_rate.text))))
-        return float(discount_rate.text)
+            return int(discount_rate) * (10 ** -(len(str(discount_rate))))
+        return float(discount_rate)
 
 
-def determine_promo_function(reward_type, remark, promo_description, discounted_price, discount_rate, min_qty):
+def find_promo_function(reward_type: RewardType, remark: str, promo_description: str, min_qty: float,
+                        discount_rate: Union[float, None], discounted_price: Union[float, None]):
     if reward_type == RewardType.SECOND_INSTANCE_DIFFERENT_DISCOUNT:
         if not discounted_price:
             return lambda item: item.price * (1 - (discount_rate / min_qty))
-        else:
-            return lambda item: (item.price * (min_qty - 1) + discounted_price) / min_qty
+        return lambda item: (item.price * (min_qty - 1) + discounted_price) / min_qty
 
-    elif reward_type == RewardType.DISCOUNT_IN_ITEM_IF_PURCHASING_OTHER_ITEMS:
+    if reward_type == RewardType.DISCOUNT_IN_ITEM_IF_PURCHASING_OTHER_ITEMS:
         return lambda item: item.price
 
-    elif reward_type == RewardType.SECOND_OR_THIRD_INSTANCE_FOR_FREE:
+    if reward_type == RewardType.SECOND_OR_THIRD_INSTANCE_FOR_FREE:
         return lambda item: item.price * (1 - (1 / min_qty))
 
-    elif reward_type == RewardType.DISCOUNT_IN_PERCENTAGE:
+    if reward_type == RewardType.DISCOUNT_IN_PERCENTAGE:
         return lambda item: item.price * (1 - discount_rate / (2 if "השני ב" in promo_description else 1))
 
-    elif reward_type == RewardType.SECOND_INSTANCE_SAME_DISCOUNT:
+    if reward_type == RewardType.SECOND_INSTANCE_SAME_DISCOUNT:
         if "השני ב" in promo_description:
             return lambda item: (item.price + discounted_price) / 2
-        else:
-            return lambda item: discounted_price / min_qty
+        return lambda item: discounted_price / min_qty
 
-    elif reward_type == RewardType.DISCOUNT_BY_THRESHOLD:
+    if reward_type == RewardType.DISCOUNT_BY_THRESHOLD:
         return lambda item: item.price - discount_rate
 
-    elif remark and 'מחיר המבצע הינו המחיר לק"ג' in remark.text:
+    if 'מחיר המבצע הינו המחיר לק"ג' in remark:
         return lambda item: discounted_price
 
-    elif discounted_price and min_qty:
+    if discounted_price and min_qty:
         return lambda item: discounted_price / min_qty
 
     return lambda item: INVALID_OR_UNKNOWN_PROMOTION_FUNCTION
 
 
-def is_valid_promo(start_time: datetime, end_time: datetime, description):
+def is_valid_promo(end_time: datetime, description) -> bool:
     """
     This function returns whether a given Promotion object is currently valid.
     """
-    today_date: datetime = datetime.now()
-    not_expired: bool = end_time >= today_date
-    has_started: bool = start_time <= today_date
+    not_expired: bool = end_time >= datetime.now()
     in_promo_ignore_list: bool = any(product in description for product in PRODUCTS_TO_IGNORE)
-    return not_expired and has_started and not in_promo_ignore_list
+    return not_expired and not in_promo_ignore_list
 
 
-def main_latest_promos(store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool):
+def main_latest_promos(store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool) -> None:
     """
     This function writes to a CSV file the available promotions in a store with a given id sorted by their update date.
 
@@ -286,7 +262,8 @@ def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
             print(promo.repr_ltr())
 
 
-def get_all_null_items_in_promos(chain, store_id):
+# TODO: change to returning list of Items
+def get_all_null_items_in_promos(chain, store_id) -> List[str]:
     """
     This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
     """
