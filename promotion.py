@@ -11,6 +11,7 @@ from utils import (
     create_bs_object,
 )
 from supermarket_chain import SupermarketChain
+import pandas as pd
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
@@ -44,7 +45,7 @@ class Promotion:
 
     def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[Item],
                  promo_func: callable, club_id: ClubID, promotion_id: float, max_qty: int,
-                 allow_multiple_discounts: bool, reward_type: RewardType):
+                 allow_multiple_discounts: bool, reward_type: RewardType, type_file: str = "excel"):
         self.content: str = content
         self.start_date: datetime = start_date
         self.end_date: datetime = end_date
@@ -56,6 +57,7 @@ class Promotion:
         self.allow_multiple_discounts = allow_multiple_discounts
         self.reward_type = reward_type
         self.promotion_id = promotion_id
+        self.type_file = type_file
 
     def repr_ltr(self):
         title = self.content
@@ -75,28 +77,43 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
     :param output_filename: A given file to write to
     """
     encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
+    columns = [
+        'תיאור מבצע',
+        'הפריט המשתתף במבצע',
+        'מחיר לפני מבצע',
+        'מחיר אחרי מבצע',
+        'אחוז הנחה',
+        'סוג מבצע',
+        'כמות מקס',
+        'כפל הנחות',
+        'המבצע החל',
+        'זמן תחילת מבצע',
+        'זמן סיום מבצע',
+        'זמן עדכון אחרון',
+        'יצרן',
+        'ברקוד פריט',
+        'סוג מבצע לפי תקנות שקיפות מחירים',
+    ]
+    if output_filename.endswith(".csv"):
+        with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
+            promos_writer = csv.writer(f_out)
+            promos_writer.writerow(columns)
+            for promo in promotions:
+                promos_writer.writerows([get_promotion_row_in_csv(promo, item) for item in promo.items])
+    else:
+        with pd.ExcelWriter(output_filename, 'openpyxl', datetime_format='DD/MM/YYYY') as xl:
+            dt = pd.DataFrame(columns=columns)
+            for promo in promotions:
+                prms = dict_promos([get_promotion_row_in_csv(promo, item) for item in promo.items], columns)
+                if prms:
+                    dt = dt.append(prms, True)
+                else:
+                    continue
+            dt.to_excel(xl, index=False, sheet_name="name")
 
-    with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
-        promos_writer = csv.writer(f_out)
-        promos_writer.writerow([
-            'תיאור מבצע',
-            'הפריט המשתתף במבצע',
-            'מחיר לפני מבצע',
-            'מחיר אחרי מבצע',
-            'אחוז הנחה',
-            'סוג מבצע',
-            'כמות מקס',
-            'כפל הנחות',
-            'המבצע החל',
-            'זמן תחילת מבצע',
-            'זמן סיום מבצע',
-            'זמן עדכון אחרון',
-            'יצרן',
-            'ברקוד פריט',
-            'סוג מבצע לפי תקנות שקיפות מחירים',
-        ])
-        for promo in promotions:
-            promos_writer.writerows([get_promotion_row_in_csv(promo, item) for item in promo.items])
+
+def dict_promos(promos: list, columns: list):
+    return {col: p for prom in promos for col, p in zip(columns, prom)}
 
 
 def get_promotion_row_in_csv(promo: Promotion, item: Item):
@@ -232,7 +249,8 @@ def is_valid_promo(end_time: datetime, description) -> bool:
     return not_expired and not in_promo_ignore_list
 
 
-def main_latest_promos(store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool) -> None:
+def main_latest_promos(
+        store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool, file_type: str) -> None:
     """
     This function writes to a CSV file the available promotions in a store with a given id sorted by their update date.
 
@@ -245,7 +263,8 @@ def main_latest_promos(store_id: int, load_xml: bool, chain: SupermarketChain, l
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
-    write_promotions_to_csv(promotions, f'results/{repr(type(chain))}_promos_{store_id}.csv')
+    ex_file = f'results/{repr(type(chain))}_promos_{store_id}{file_type}'
+    write_promotions_to_csv(promotions, ex_file)
 
 
 def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):
