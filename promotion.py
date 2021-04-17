@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Union
 import csv
-import sys, os
+import sys
 from item import Item
 from utils import (
     create_items_dict,
