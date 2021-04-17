@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Union
 import csv
-
+import sys, os
 from item import Item
 from utils import (
     create_items_dict,
@@ -74,7 +74,9 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
     :param promotions: A given list of promotions
     :param output_filename: A given file to write to
     """
-    with open(output_filename, mode='w', newline='') as f_out:
+    encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
+
+    with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
         promos_writer = csv.writer(f_out)
         promos_writer.writerow([
             'תיאור מבצע',
