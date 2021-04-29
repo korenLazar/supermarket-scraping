@@ -78,19 +78,19 @@ if __name__ == '__main__':
                         help='The name of the requested chain',
                         choices=chain_dict.keys(),
                         )
-    parser.add_argument('--type',
+    parser.add_argument('--filetype',
                         choices=("excel", "csv"),
                         default='excel',
                         
-        help="a switch flag to set set the output file to a CSV file",
+                        help="The extension/type of the promotions output file",
         required=False,
                         )
     args = parser.parse_args()
-    file_type = '.xlsx' if not args.type or args.type == 'excel' else '.csv'
+    filetype = 'xlsx' if not args.filetype or args.filetype == 'excel' else 'csv'
     chain: SupermarketChain = chain_dict[args.chain]
     if args.promos:
         arg_store_id = int(args.promos[0])
-        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, chain=chain, load_promos=args.load_promos, file_type=file_type)
+        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, chain=chain, load_promos=args.load_promos, filetype=filetype)
 
     elif args.price:
         get_products_prices(chain, store_id=args.price[0], load_xml=args.load_prices, product_name=args.price[1])

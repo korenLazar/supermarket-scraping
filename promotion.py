@@ -1,17 +1,16 @@
+import csv
 import re
+import sys
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Union
-import csv
-import sys
-from item import Item
-from utils import (
-    create_items_dict,
-    get_float_from_tag, xml_file_gen,
-    create_bs_object,
-)
-from supermarket_chain import SupermarketChain
+
 import pandas as pd
+
+from item import Item
+from supermarket_chain import SupermarketChain
+from utils import (create_bs_object, create_items_dict, get_float_from_tag,
+                   xml_file_gen)
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
@@ -45,7 +44,7 @@ class Promotion:
 
     def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[Item],
                  promo_func: callable, club_id: ClubID, promotion_id: float, max_qty: int,
-                 allow_multiple_discounts: bool, reward_type: RewardType, type_file: str = "excel"):
+                 allow_multiple_discounts: bool, reward_type: RewardType, filetype: str = "excel"):
         self.content: str = content
         self.start_date: datetime = start_date
         self.end_date: datetime = end_date
@@ -57,7 +56,7 @@ class Promotion:
         self.allow_multiple_discounts = allow_multiple_discounts
         self.reward_type = reward_type
         self.promotion_id = promotion_id
-        self.type_file = type_file
+        self.filetype = filetype
 
     def repr_ltr(self):
         title = self.content
@@ -112,7 +111,16 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
             dt.to_excel(xl, index=False, sheet_name="name")
 
 
-def dict_promos(promos: list, columns: list):
+def dict_promos(promos: list, columns: list) -> dict:
+    '''dict_promos creates a dictionary of every promo to its place in the xml
+
+    :param promos: list of promos, separated by comma
+    :type promos: list
+    :param columns: columns of the exact place in the xml
+    :type columns: list
+    :return: dictionary of every promo and all the parameters its need
+    :rtype: dict
+    '''
     return {col: p for prom in promos for col, p in zip(columns, prom)}
 
 
@@ -250,7 +258,7 @@ def is_valid_promo(end_time: datetime, description) -> bool:
 
 
 def main_latest_promos(
-        store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool, file_type: str) -> None:
+        store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool, filetype: str) -> None:
     """
     This function writes to a CSV file the available promotions in a store with a given id sorted by their update date.
 
@@ -263,7 +271,7 @@ def main_latest_promos(
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
-    ex_file = f'results/{repr(type(chain))}_promos_{store_id}{file_type}'
+    ex_file = f'results/{repr(type(chain))}_promos_{store_id}.{filetype}'
     write_promotions_to_csv(promotions, ex_file)
 
 
