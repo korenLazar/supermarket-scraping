@@ -3,10 +3,10 @@ from supermarket_chain import SupermarketChain
 from bs4 import BeautifulSoup
 
 
-def get_store_id(city: str, load_xml: bool, chain: SupermarketChain):
+def print_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
     """
-    This function prints the store_ids of stores in a given city.
-    The city must match exactly to its spelling in Shufersal's website (hence it should be in Hebrew alphabet).
+    This function prints the stores IDs of stores in a given city.
+    The city must match its spelling in Shufersal's website (hence it should be in Hebrew).
 
     :param chain: A given supermarket chain
     :param load_xml: A boolean representing whether to load an existing xml or load an already saved one
