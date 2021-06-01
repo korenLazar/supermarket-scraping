@@ -14,5 +14,4 @@ class Shufersal(SupermarketChain):
         req_res: requests.Response = requests.get(url)
         soup: BeautifulSoup = BeautifulSoup(req_res.text, features='lxml')
         down_url: str = soup.find('a', text="לחץ להורדה")['href']
-        print(down_url)
         return down_url

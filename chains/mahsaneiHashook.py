@@ -24,7 +24,6 @@ class MahsaneiHashook(SupermarketChain):
         suffix: str = soup.find('a', href=lambda value: value and category.name.replace('s', '') in value
                                 and f'-{store_id:03d}-20' in value).attrs['href']
         down_url: str = prefix + suffix
-        print(down_url)
         return down_url
 
     @staticmethod
