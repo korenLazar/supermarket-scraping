@@ -1,13 +1,18 @@
+import logging
+import os
 import re
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Union
 import csv
 import sys
+import pandas as pd
+import xlsxwriter
 from item import Item
 from utils import (
     create_items_dict,
-    get_float_from_tag, xml_file_gen,
+    get_float_from_tag, log_message_and_time_if_debug, xml_file_gen,
     create_bs_object,
 )
 from supermarket_chain import SupermarketChain
@@ -15,6 +20,23 @@ from supermarket_chain import SupermarketChain
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
 PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'מגבת', 'מפות', 'פסטיגל', 'ביגי']
+PROMOTIONS_TABLE_HEADERS = [
+    'תיאור מבצע',
+    'הפריט המשתתף במבצע',
+    'מחיר לפני מבצע',
+    'מחיר אחרי מבצע',
+    'אחוז הנחה',
+    'סוג מבצע',
+    'כמות מקס',
+    'כפל הנחות',
+    'המבצע החל',
+    'זמן תחילת מבצע',
+    'זמן סיום מבצע',
+    'זמן עדכון אחרון',
+    'יצרן',
+    'ברקוד פריט',
+    'סוג מבצע לפי תקנות שקיפות מחירים',
+]
 
 
 class ClubID(Enum):
@@ -69,42 +91,61 @@ class Promotion:
 
 def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -> None:
     """
-    This function writes a given list of promotions to a given output file in a CSV format.
+    This function writes a promotions table to a given CSV or XLSX output file.
 
     :param promotions: A given list of promotions
     :param output_filename: A given file to write to
     """
-    encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
+    log_message_and_time_if_debug('Writing promotions to output file')
+    rows = [get_promotion_row_in_csv(promo, item) for promo in promotions for item in promo.items]
+    if output_filename.endswith('.csv'):
+        encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
+        with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
+            promos_writer = csv.writer(f_out)
+            promos_writer.writerow(PROMOTIONS_TABLE_HEADERS)
+            promos_writer.writerows(rows)
 
-    with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
-        promos_writer = csv.writer(f_out)
-        promos_writer.writerow([
-            'תיאור מבצע',
-            'הפריט המשתתף במבצע',
-            'מחיר לפני מבצע',
-            'מחיר אחרי מבצע',
-            'אחוז הנחה',
-            'סוג מבצע',
-            'כמות מקס',
-            'כפל הנחות',
-            'המבצע החל',
-            'זמן תחילת מבצע',
-            'זמן סיום מבצע',
-            'זמן עדכון אחרון',
-            'יצרן',
-            'ברקוד פריט',
-            'סוג מבצע לפי תקנות שקיפות מחירים',
-        ])
-        for promo in promotions:
-            promos_writer.writerows([get_promotion_row_in_csv(promo, item) for item in promo.items])
+    elif output_filename.endswith('.xlsx'):
+        df = pd.DataFrame(rows, columns=PROMOTIONS_TABLE_HEADERS)
+        workbook = xlsxwriter.Workbook(output_filename)
+        worksheet1 = workbook.add_worksheet()
+        worksheet1.right_to_left()
+        date_time_format = workbook.add_format({'num_format': 'm/d/yy h:mm;@'})
+        number_format = workbook.add_format({'num_format': '0.00'})
+        percentage_format = workbook.add_format({'num_format': '0.00%'})
+        worksheet1.set_column('A:A', width=35)
+        worksheet1.set_column('B:B', width=25)
+        worksheet1.set_column('C:D', cell_format=number_format)
+        worksheet1.set_column('E:E', cell_format=percentage_format)
+        worksheet1.set_column('J:L', width=15, cell_format=date_time_format)
+        worksheet1.add_table(
+            first_row=0,
+            first_col=0,
+            last_row=len(df),
+            last_col=len(df.columns) - 1,
+            options={
+                "columns": [{"header": i} for i in PROMOTIONS_TABLE_HEADERS],
+                "data": df.values.tolist(),
+                'style': 'Table Style Medium 11',
+            }, )
+        workbook.close()
+
+    else:
+        raise ValueError(f"The given output file has an invalid extension:\n{output_filename}")
 
 
 def get_promotion_row_in_csv(promo: Promotion, item: Item):
+    """
+    This function returns a row in the promotions table.
+    :param promo:
+    :param item:
+    :return:
+    """
     return [promo.content,
             item.name,
             item.price,
-            f'{promo.promo_func(item):.3f}',
-            f'{(item.price - promo.promo_func(item)) / item.price:.3%}',
+            promo.promo_func(item),
+            (item.price - promo.promo_func(item)) / item.price,
             promo.club_id.name.replace('_', ' '),
             promo.max_qty,
             promo.allow_multiple_discounts,
@@ -127,10 +168,15 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
     :param load_prices: A boolean representing whether to load an existing xml or load an already saved one
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
+    log_message_and_time_if_debug('Importing prices XML file')
     items_dict: Dict[str, Item] = create_items_dict(chain, load_prices, store_id)
+
     xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PromosFull.name)
+
+    log_message_and_time_if_debug('Importing promotions XML file')
     bs_promos = create_bs_object(xml_path, chain, store_id, load_promos, chain.XMLFilesCategory.PromosFull)
 
+    log_message_and_time_if_debug('Creating promotions objects')
     promo_objs = list()
     for promo in bs_promos.find_all(chain.promotion_tag_name):
         promotion_id = promo.find(re.compile('PromotionId', re.IGNORECASE))
@@ -141,7 +187,6 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
         promo_inst = create_new_promo_instance(chain, items_dict, promo, promotion_id)
         if promo_inst:
             promo_objs.append(promo_inst)
-
     return promo_objs
 
 
@@ -232,23 +277,25 @@ def is_valid_promo(end_time: datetime, description) -> bool:
     return not_expired and not in_promo_ignore_list
 
 
-def main_latest_promos(store_id: int, load_xml: bool, chain: SupermarketChain, load_promos: bool) -> None:
+def main_latest_promos(store_id: int, output_filename, chain: SupermarketChain, load_promos: bool,
+                       load_xml: bool) -> None:
     """
-    This function writes to a CSV file the available promotions in a store with a given id sorted by their update date.
+    This function writes to a file the available promotions in a store with a given id sorted by their update date.
 
     :param chain: The name of the requested supermarket chain
     :param store_id: A given store id
     :param load_xml: A boolean representing whether to load an existing prices xml file
     :param load_promos: A boolean representing whether to load an existing promos xml file
+    :param output_filename: A path to write the promotions table
     """
 
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
-    write_promotions_to_csv(promotions, f'results/{repr(type(chain))}_promos_{store_id}.csv')
+    write_promotions_to_csv(promotions, output_filename)
 
 
-def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):
+def log_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):
     """
     This function prints all promotions in a given chain and store_id containing a given promo_name.
 
@@ -261,7 +308,7 @@ def get_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_prices, load_promos)
     for promo in promotions:
         if promo_name in promo.content:
-            print(promo.repr_ltr())
+            logging.info(promo.repr_ltr())
 
 
 # TODO: change to returning list of Items

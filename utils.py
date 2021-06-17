@@ -1,6 +1,9 @@
 import gzip
 import io
+import logging
 import zipfile
+from argparse import ArgumentTypeError
+from datetime import datetime
 from typing import AnyStr, Dict
 import requests
 from bs4 import BeautifulSoup
@@ -11,6 +14,7 @@ from supermarket_chain import SupermarketChain
 
 RESULTS_DIRNAME = "results"
 RAW_FILES_DIRNAME = "raw_files"
+VALID_PROMOTION_FILE_EXTENSIONS = [".csv", ".xlsx"]
 
 
 def xml_file_gen(chain: SupermarketChain, store_id: int, category_name: str) -> str:
@@ -97,7 +101,7 @@ def create_items_dict(chain: SupermarketChain, load_xml, store_id: int) -> Dict[
     return {item.find('ItemCode').text: chain.get_item_info(item) for item in bs_prices.find_all(chain.item_tag_name)}
 
 
-def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, product_name: str) -> None:
+def log_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, product_name: str) -> None:
     """
     This function prints the products in a given store which contains a given product_name.
 
@@ -111,7 +115,7 @@ def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, 
     prods = [item for item in bs_prices.find_all("Item") if product_name in item.find("ItemName").text]
     prods.sort(key=lambda x: float(x.find("UnitOfMeasurePrice").text))
     for prod in prods:
-        print(
+        logging.info(
             (
                 prod.find('ItemName').text[::-1],
                 prod.find('ManufacturerName').text[::-1],
@@ -123,3 +127,18 @@ def get_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, 
 def get_float_from_tag(tag, int_tag) -> int:
     content = tag.find(int_tag)
     return float(content.text) if content else 0
+
+
+def is_valid_promotion_output_file(output_file: str):
+    return any(output_file.endswith(extension) for extension in VALID_PROMOTION_FILE_EXTENSIONS)
+
+
+def valid_promotion_output_file(output_file: str):
+    if not is_valid_promotion_output_file(output_file):
+        raise ArgumentTypeError(f"Given output file is not a natural number:\n{output_file}")
+    return output_file
+
+
+def log_message_and_time_if_debug(msg: str):
+    logging.info(msg)
+    logging.debug(datetime.now())

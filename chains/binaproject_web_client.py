@@ -19,7 +19,6 @@ class BinaProjectWebClient:
         suffix = next(cur_json["FileNm"] for cur_json in jsons_files if f'-{store_id:03d}-20' in cur_json["FileNm"]
                       and category.name.replace('s', '') in cur_json["FileNm"])
         down_url: str = '/'.join([hostname, self.path_prefix, "Download", suffix])
-        print(down_url)
         return down_url
 
     @property

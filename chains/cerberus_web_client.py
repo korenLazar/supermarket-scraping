@@ -20,7 +20,6 @@ class CerberusWebClient:
         suffix: str = next(d['name'] for d in s_json['aaData'] if f'-{store_id:03d}-20' in d['name'])
 
         download_url: str = hostname + "/file/d/" + suffix
-        print(download_url)
         return download_url
 
     @property

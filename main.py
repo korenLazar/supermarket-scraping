@@ -1,9 +1,15 @@
+import os
+import sys
+import time
 from argparse import ArgumentParser
+from datetime import datetime
 from pathlib import Path
+import logging
 
-from promotion import main_latest_promos, get_promos_by_name
-from store_utils import get_store_id
-from utils import RESULTS_DIRNAME, RAW_FILES_DIRNAME, get_products_prices
+from promotion import main_latest_promos, log_promos_by_name
+from store_utils import log_stores_ids
+from utils import RESULTS_DIRNAME, RAW_FILES_DIRNAME, VALID_PROMOTION_FILE_EXTENSIONS, log_products_prices, \
+    valid_promotion_output_file
 from supermarket_chain import SupermarketChain
 from chains import (
     bareket,
@@ -58,9 +64,6 @@ if __name__ == '__main__':
                         metavar='city',
                         nargs=1,
                         )
-    # parser.add_argument('--all_deals',
-    #                     action='store_true',
-    #                     )
     parser.add_argument('--load_prices',
                         help='boolean flag representing whether to load an existing price XML file',
                         action='store_true',
@@ -78,21 +81,56 @@ if __name__ == '__main__':
                         help='The name of the requested chain',
                         choices=chain_dict.keys(),
                         )
+    parser.add_argument('--file_extension',
+                        help='The extension of the promotions output file',
+                        choices=VALID_PROMOTION_FILE_EXTENSIONS,
+                        default='.xlsx',
+                        )
+    parser.add_argument('--output_filename',
+                        help='The path to write the promotions table to',
+                        type=valid_promotion_output_file,
+                        )
+    parser.add_argument('--only_export_to_file',
+                        help='Boolean flag representing whether only export or also open the promotion output file',
+                        action='store_true',
+                        )
+    parser.add_argument('--debug',
+                        help='Boolean flag representing whether to run in debug mode',
+                        action='store_true',
+                        )
     args = parser.parse_args()
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     chain: SupermarketChain = chain_dict[args.chain]
+
     if args.promos:
         arg_store_id = int(args.promos[0])
-        main_latest_promos(store_id=arg_store_id, load_xml=args.load_prices, chain=chain, load_promos=args.load_promos)
+
+        if args.output_filename:
+            output_filename = args.output_filename
+            directory = os.path.dirname(output_filename)
+            Path(directory).mkdir(parents=True, exist_ok=True)
+        else:
+            Path(RESULTS_DIRNAME).mkdir(exist_ok=True)
+            output_filename = f'{RESULTS_DIRNAME}/{repr(type(chain))}_promos_{arg_store_id}{args.file_extension}'
+
+        main_latest_promos(store_id=arg_store_id, output_filename=output_filename, chain=chain,
+                           load_promos=args.load_promos, load_xml=args.load_prices)
+        if not args.only_export_to_file:
+            os.startfile(Path(output_filename))
+        logging.debug(f'Process finished at: {datetime.now()}')
 
     elif args.price:
-        get_products_prices(chain, store_id=args.price[0], load_xml=args.load_prices, product_name=args.price[1])
+        log_products_prices(chain, store_id=args.price[0], load_xml=args.load_prices, product_name=args.price[1])
 
     elif args.find_store_id:
         arg_city = args.find_store_id[0]
-        get_store_id(city=arg_city, load_xml=args.load_stores, chain=chain)
+        log_stores_ids(city=arg_city, load_xml=args.load_stores, chain=chain)
 
     elif args.find_promos_by_name:
         arg_store_id = int(args.find_promos_by_name[0])
-        get_promos_by_name(store_id=arg_store_id, chain=chain, promo_name=args.find_promos_by_name[1],
+        log_promos_by_name(store_id=arg_store_id, chain=chain, promo_name=args.find_promos_by_name[1],
                            load_prices=args.load_prices, load_promos=args.load_promos)

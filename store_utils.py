@@ -1,9 +1,11 @@
+import logging
+
 from utils import xml_file_gen, create_bs_object
 from supermarket_chain import SupermarketChain
 from bs4 import BeautifulSoup
 
 
-def print_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
+def log_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
     """
     This function prints the stores IDs of stores in a given city.
     The city must match its spelling in Shufersal's website (hence it should be in Hebrew).
@@ -17,7 +19,7 @@ def print_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
 
     for store in bs_stores.find_all("STORE"):
         if store.find("CITY").text == city:
-            print((store.find("ADDRESS").text, store.find("STOREID").text, store.find("SUBCHAINNAME").text))
+            logging.info((store.find("ADDRESS").text, store.find("STOREID").text, store.find("SUBCHAINNAME").text))
 
 
 def get_all_deals(chain):
