@@ -4,10 +4,9 @@ import logging
 import zipfile
 from argparse import ArgumentTypeError
 from datetime import datetime
-from typing import AnyStr, Dict, List
+from typing import AnyStr, Dict
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import Tag
 from os import path
 
 from item import Item
@@ -55,7 +54,7 @@ def create_bs_object(chain: SupermarketChain, store_id: int, category: Supermark
 def get_bs_object_from_link(chain: SupermarketChain, store_id: int, category: SupermarketChain.XMLFilesCategory,
                             xml_path: str) -> BeautifulSoup:
     """
-    This function creates a BeautifulSoup (BS) object by generating a download link from Shufersal's API.
+    This function creates a BeautifulSoup (BS) object by generating a download link the given chain's API.
 
     :param chain: A given supermarket chain
     :param xml_path: A given path to an XML file to load/save the BS object from/to.
@@ -64,7 +63,7 @@ def get_bs_object_from_link(chain: SupermarketChain, store_id: int, category: Su
     :return: A BeautifulSoup object with xml content.
     """
     session = requests.Session()
-    download_url = chain.get_download_url(store_id, category, session)
+    download_url: str = chain.get_download_url(store_id, category, session)
     response_content = session.get(download_url).content
     try:
         xml_content: AnyStr = gzip.decompress(response_content)
@@ -130,16 +129,16 @@ def get_float_from_tag(tag, int_tag) -> int:
     return float(content.text) if content else 0
 
 
-def is_valid_promotion_output_file(output_file: str):
+def is_valid_promotion_output_file(output_file: str) -> bool:
     return any(output_file.endswith(extension) for extension in VALID_PROMOTION_FILE_EXTENSIONS)
 
 
-def valid_promotion_output_file(output_file: str):
+def valid_promotion_output_file(output_file: str) -> str:
     if not is_valid_promotion_output_file(output_file):
         raise ArgumentTypeError(f"Given output file is not a natural number:\n{output_file}")
     return output_file
 
 
-def log_message_and_time_if_debug(msg: str):
+def log_message_and_time_if_debug(msg: str) -> None:
     logging.info(msg)
     logging.debug(datetime.now())

@@ -22,7 +22,6 @@ XML_FILES_PROMOTIONS_CATEGORIES = [SupermarketChain.XMLFilesCategory.PromosFull,
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
-PRODUCTS_TO_IGNORE = ['סירים', 'מגבות', 'מגבת', 'מפות', 'פסטיגל', 'ביגי']
 PROMOTIONS_TABLE_HEADERS = [
     'תיאור מבצע',
     'הפריט המשתתף במבצע',
@@ -179,7 +178,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
     log_message_and_time_if_debug('Creating promotions objects')
     promo_objs = list()
     for promo in promo_tags:
-        promotion_id = promo.find(re.compile('PromotionId', re.IGNORECASE))
+        promotion_id = int(promo.find(re.compile('PromotionId', re.IGNORECASE)).text)
         if promo_objs and promo_objs[-1].promotion_id == promotion_id:
             promo_objs[-1].items.extend(chain.get_items(promo, items_dict))
             continue
@@ -191,7 +190,23 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
     return promo_objs
 
 
-def create_new_promo_instance(chain, items_dict, promo, promotion_id):
+def create_new_promo_instance(chain: SupermarketChain, items_dict: Dict[str, Item], promo: Tag, promotion_id: int) \
+        -> Union[Promotion, None]:
+    """
+    This function generates a Promotion object from a promotion tag.
+
+    :param chain: The supermarket chain publishing the promotion
+    :param items_dict: A dictionary of items that might participate in the promotion
+    :param promo: An xml Tag representing the promotion
+    :param promotion_id: An integer representing the promotion ID
+    :return: If the promotion expired - return None, else return the Promotion object
+    """
+    promo_end_time = datetime.strptime(promo.find('PromotionEndDate').text + ' ' +
+                                       promo.find('PromotionEndHour').text,
+                                       chain.date_hour_format)
+    if promo_end_time < datetime.now():
+        return None
+
     reward_type = RewardType(int(promo.find("RewardType").text))
     discounted_price = get_discounted_price(promo)
     promo_description = promo.find('PromotionDescription').text
@@ -216,11 +231,10 @@ def create_new_promo_instance(chain, items_dict, promo, promotion_id):
     multiple_discounts_allowed = bool(int(promo.find('AllowMultipleDiscounts').text))
     items = chain.get_items(promo, items_dict)
 
-    if is_valid_promo(end_time=promo_end_time, description=promo_description):
-        return Promotion(content=promo_description, start_date=promo_start_time, end_date=promo_end_time,
-                         update_date=promo_update_time, items=items, promo_func=promo_func,
-                         club_id=club_id, promotion_id=promotion_id, max_qty=max_qty,
-                         allow_multiple_discounts=multiple_discounts_allowed, reward_type=reward_type)
+    return Promotion(content=promo_description, start_date=promo_start_time, end_date=promo_end_time,
+                     update_date=promo_update_time, items=items, promo_func=promo_func,
+                     club_id=club_id, promotion_id=promotion_id, max_qty=max_qty,
+                     allow_multiple_discounts=multiple_discounts_allowed, reward_type=reward_type)
 
 
 def get_discounted_price(promo):
@@ -267,15 +281,6 @@ def find_promo_function(reward_type: RewardType, remark: str, promo_description:
         return lambda item: discounted_price / min_qty
 
     return lambda item: INVALID_OR_UNKNOWN_PROMOTION_FUNCTION
-
-
-def is_valid_promo(end_time: datetime, description) -> bool:
-    """
-    This function returns whether a given Promotion object is currently valid.
-    """
-    not_expired: bool = end_time >= datetime.now()
-    in_promo_ignore_list: bool = any(product in description for product in PRODUCTS_TO_IGNORE)
-    return not_expired and not in_promo_ignore_list
 
 
 def main_latest_promos(store_id: int, output_filename, chain: SupermarketChain, load_promos: bool,

@@ -1,8 +1,8 @@
 import logging
+from bs4 import BeautifulSoup
 
 from utils import xml_file_gen, create_bs_object
 from supermarket_chain import SupermarketChain
-from bs4 import BeautifulSoup
 
 
 def log_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
