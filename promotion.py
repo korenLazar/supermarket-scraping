@@ -2,7 +2,6 @@ import logging
 import re
 from datetime import datetime
 from enum import Enum
-from os import path
 from typing import Dict, List, Union
 from bs4.element import Tag
 import csv
@@ -67,7 +66,7 @@ class Promotion:
     """
 
     def __init__(self, content: str, start_date: datetime, end_date: datetime, update_date: datetime, items: List[Item],
-                 promo_func: callable, club_id: ClubID, promotion_id: float, max_qty: int,
+                 promo_func: callable, club_id: ClubID, promotion_id: int, max_qty: int,
                  allow_multiple_discounts: bool, reward_type: RewardType):
         self.content: str = content
         self.start_date: datetime = start_date
@@ -77,9 +76,9 @@ class Promotion:
         self.items: List[Item] = items
         self.club_id: ClubID = club_id
         self.max_qty: int = max_qty
-        self.allow_multiple_discounts = allow_multiple_discounts
-        self.reward_type = reward_type
-        self.promotion_id = promotion_id
+        self.allow_multiple_discounts: bool = allow_multiple_discounts
+        self.reward_type: RewardType = reward_type
+        self.promotion_id: int = promotion_id
 
     def repr_ltr(self):
         title = self.content
@@ -99,7 +98,7 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
     :param output_filename: A given file to write to
     """
     log_message_and_time_if_debug('Writing promotions to output file')
-    rows = [get_promotion_row_in_csv(promo, item) for promo in promotions for item in promo.items]
+    rows = [get_promotion_row_for_csv(promo, item) for promo in promotions for item in promo.items]
     if output_filename.endswith('.csv'):
         encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
         with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
@@ -136,12 +135,12 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
         raise ValueError(f"The given output file has an invalid extension:\n{output_filename}")
 
 
-def get_promotion_row_in_csv(promo: Promotion, item: Item):
+def get_promotion_row_for_csv(promo: Promotion, item: Item):
     """
-    This function returns a row in the promotions table.
-    :param promo:
-    :param item:
-    :return:
+    This function returns a row in the promotions XLSX table.
+
+    :param promo: A given Promotion object
+    :param item: A given item object participating in the promotion
     """
     return [promo.content,
             item.name,
@@ -160,14 +159,15 @@ def get_promotion_row_in_csv(promo: Promotion, item: Item):
             promo.reward_type.value]
 
 
-def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos) -> List[Promotion]:
+def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos: bool) \
+        -> List[Promotion]:
     """
     This function return the available promotions given a BeautifulSoup object.
 
-    :param load_promos:
     :param chain: The name of the requested supermarket chain
-    :param store_id: A given store id
-    :param load_prices: A boolean representing whether to load an existing xml or load an already saved one
+    :param store_id: A given store ID
+    :param load_prices: A boolean representing whether to load an existing prices file or download it
+    :param load_promos: A boolean representing whether to load an existing promotion file or download it
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
     log_message_and_time_if_debug('Importing prices XML file')
@@ -222,9 +222,6 @@ def create_new_promo_instance(chain: SupermarketChain, items_dict: Dict[str, Ite
     promo_start_time = datetime.strptime(promo.find('PromotionStartDate').text + ' ' +
                                          promo.find('PromotionStartHour').text,
                                          chain.date_hour_format)
-    promo_end_time = datetime.strptime(promo.find('PromotionEndDate').text + ' ' +
-                                       promo.find('PromotionEndHour').text,
-                                       chain.date_hour_format)
     promo_update_time = datetime.strptime(promo.find(chain.promotion_update_tag_name).text,
                                           chain.update_date_format)
     club_id = ClubID(int(promo.find(re.compile('ClubId', re.IGNORECASE)).text))
@@ -320,6 +317,7 @@ def log_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
 def get_all_null_items_in_promos(chain, store_id) -> List[str]:
     """
     This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
+    Outdated.
     """
     items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_xml=True)
     promo_tags = get_all_promos_tags(chain, store_id, load_xml=True)
