@@ -1,21 +1,24 @@
 import logging
-import os
 import re
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
+from os import path
 from typing import Dict, List, Union
+from bs4.element import Tag
 import csv
 import sys
 import pandas as pd
 import xlsxwriter
 from item import Item
 from utils import (
-    create_items_dict,
-    get_float_from_tag, log_message_and_time_if_debug, xml_file_gen,
-    create_bs_object,
+    create_bs_object, create_items_dict,
+    get_float_from_tag,
+    log_message_and_time_if_debug, xml_file_gen,
 )
 from supermarket_chain import SupermarketChain
+
+XML_FILES_PROMOTIONS_CATEGORIES = [SupermarketChain.XMLFilesCategory.PromosFull,
+                                   SupermarketChain.XMLFilesCategory.Promos]
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
@@ -169,16 +172,13 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
     log_message_and_time_if_debug('Importing prices XML file')
-    items_dict: Dict[str, Item] = create_items_dict(chain, load_prices, store_id)
-
-    xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PromosFull.name)
-
+    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_prices)
     log_message_and_time_if_debug('Importing promotions XML file')
-    bs_promos = create_bs_object(xml_path, chain, store_id, load_promos, chain.XMLFilesCategory.PromosFull)
+    promo_tags = get_all_promos_tags(chain, store_id, load_promos)
 
     log_message_and_time_if_debug('Creating promotions objects')
     promo_objs = list()
-    for promo in bs_promos.find_all(chain.promotion_tag_name):
+    for promo in promo_tags:
         promotion_id = promo.find(re.compile('PromotionId', re.IGNORECASE))
         if promo_objs and promo_objs[-1].promotion_id == promotion_id:
             promo_objs[-1].items.extend(chain.get_items(promo, items_dict))
@@ -187,6 +187,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
         promo_inst = create_new_promo_instance(chain, items_dict, promo, promotion_id)
         if promo_inst:
             promo_objs.append(promo_inst)
+
     return promo_objs
 
 
@@ -288,7 +289,6 @@ def main_latest_promos(store_id: int, output_filename, chain: SupermarketChain, 
     :param load_promos: A boolean representing whether to load an existing promos xml file
     :param output_filename: A path to write the promotions table
     """
-
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
@@ -316,12 +316,24 @@ def get_all_null_items_in_promos(chain, store_id) -> List[str]:
     """
     This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
     """
-    items_dict: Dict[str, Item] = create_items_dict(chain, True, store_id)
-    xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PromosFull.name)
-    bs_promos = create_bs_object(xml_path, chain, store_id, True, chain.XMLFilesCategory.PromosFull)
+    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_xml=True)
+    promo_tags = get_all_promos_tags(chain, store_id, load_xml=True)
+    return [item for promo_tag in promo_tags for item in chain.get_null_items(promo_tag, items_dict)]
 
-    null_items = list()
-    for promo in bs_promos.find_all(chain.promotion_tag_name):
-        null_items.extend(chain.get_null_items(promo, items_dict))
 
-    return null_items
+def get_all_promos_tags(chain: SupermarketChain, store_id: int, load_xml: bool) -> List[Tag]:
+    """
+    This function gets all the promotions tags for a given store in a given chain.
+    It includes both the full and not full promotions files.
+
+    :param chain: A given supermarket chain
+    :param store_id: A given store ID
+    :param load_xml: A boolean representing whether to try loading the promotions from an existing XML file
+    :return: A list of promotions tags
+    """
+    bs_objects = list()
+    for category in XML_FILES_PROMOTIONS_CATEGORIES:
+        xml_path = xml_file_gen(chain, store_id, category.name)
+        bs_objects.append(create_bs_object(chain, store_id, category, load_xml, xml_path))
+
+    return [promo for bs_obj in bs_objects for promo in bs_obj.find_all(chain.promotion_tag_name)]
