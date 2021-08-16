@@ -1,6 +1,4 @@
 import os
-import sys
-import time
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
@@ -32,8 +30,6 @@ from chains import (
     king_store,
     shefa_birkat_hashem,
 )
-
-# TODO: fix problem of left-to-right printing
 
 Path(RESULTS_DIRNAME).mkdir(exist_ok=True)
 Path(RAW_FILES_DIRNAME).mkdir(exist_ok=True)

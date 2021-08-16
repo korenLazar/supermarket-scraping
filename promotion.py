@@ -101,7 +101,7 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
     :param output_filename: A given file to write to
     """
     log_message_and_time_if_debug('Writing promotions to output file')
-    rows = [get_promotion_row_for_csv(promo, item) for promo in promotions for item in promo.items]
+    rows = [get_promotion_row_for_table(promo, item) for promo in promotions for item in promo.items]
     if output_filename.endswith('.csv'):
         encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
         with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
@@ -138,28 +138,30 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
         raise ValueError(f"The given output file has an invalid extension:\n{output_filename}")
 
 
-def get_promotion_row_for_csv(promo: Promotion, item: Item):
+def get_promotion_row_for_table(promo: Promotion, item: Item) -> List:
     """
     This function returns a row in the promotions XLSX table.
 
     :param promo: A given Promotion object
     :param item: A given item object participating in the promotion
     """
-    return [promo.content,
-            item.name,
-            item.price,
-            promo.promo_func(item),
-            (item.price - promo.promo_func(item)) / item.price,
-            promo.club_id.name.replace('_', ' '),
-            promo.max_qty,
-            promo.allow_multiple_discounts,
-            promo.start_date <= datetime.now(),
-            promo.start_date,
-            promo.end_date,
-            promo.update_date,
-            item.manufacturer,
-            item.code,
-            promo.reward_type.value]
+    return [
+        promo.content,
+        item.name,
+        item.price,
+        promo.promo_func(item),
+        (item.price - promo.promo_func(item)) / max(item.price, 1),
+        promo.club_id.name.replace('_', ' '),
+        promo.max_qty,
+        promo.allow_multiple_discounts,
+        promo.start_date <= datetime.now(),
+        promo.start_date,
+        promo.end_date,
+        promo.update_date,
+        item.manufacturer,
+        item.code,
+        promo.reward_type.value,
+    ]
 
 
 def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos: bool) \
