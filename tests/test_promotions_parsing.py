@@ -19,7 +19,7 @@ def test_shufersal_promo_type_1():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('פטה פיראוס 20%', 113, '', '')
+    item = Item('פטה פיראוס 20%', 113, 1, '', '')
     assert promo_func(item) == 100
 
 
@@ -38,7 +38,7 @@ def test_shufersal_promo_type_2():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('חגיגת גרנולה פ.יבשים500ג', 26.9, '', '')
+    item = Item('חגיגת גרנולה פ.יבשים500ג', 26.9, 1, '', '')
     assert promo_func(item) == 21.52
 
 
@@ -57,7 +57,7 @@ def test_shufersal_promo_type_6_1():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('פסטרמה מקסיקנית במשקל', 89, '', '')
+    item = Item('פסטרמה מקסיקנית במשקל', 89, 1, '', '')
     assert promo_func(item) == 89
 
 
@@ -76,7 +76,7 @@ def test_shufersal_promo_type_6_2():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('מכונת לוואצה ג\'ולי אדומה', 449, '', '')
+    item = Item('מכונת לוואצה ג\'ולי אדומה', 449, 1, '', '')
     assert promo_func(item) == 449
 
 
@@ -95,7 +95,7 @@ def test_shufersal_promo_type_7_1():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('פינצטה 2011 שחורה/כסופה', 14.9, '', '')
+    item = Item('פינצטה 2011 שחורה/כסופה', 14.9, 1, '', '')
     assert promo_func(item) == 7.45
 
 
@@ -114,7 +114,7 @@ def test_shufersal_promo_type_7_2():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('יוגורט עיזים 500 גרם', 12.9, '', '')
+    item = Item('יוגורט עיזים 500 גרם', 12.9, 1, '', '')
     assert promo_func(item) == 12.9 * 0.75
 
 
@@ -133,7 +133,7 @@ def test_shufersal_promo_type_9_1():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('זיתים מבוקעים פיקנטי540ג', 9.3, '', '')
+    item = Item('זיתים מבוקעים פיקנטי540ג', 9.3, 1, '', '')
     assert promo_func(item) == 9.3 * 0.75
 
 
@@ -152,7 +152,7 @@ def test_shufersal_promo_type_9_2():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('שעועית לבנה שופרסל 800גר', 18.9, '', '')
+    item = Item('שעועית לבנה שופרסל 800גר', 18.9, 1, '', '')
     assert promo_func(item) == (18.9 + 10) / 2
 
 
@@ -171,7 +171,7 @@ def test_shufersal_promo_type_9_3():
         discount_rate=discount_rate,
         discounted_price=discounted_price,
     )
-    item = Item('גומיות שחורות 12 יח', 9.9, '', '')
+    item = Item('גומיות שחורות 12 יח', 9.9, 1, '', '')
     assert promo_func(item) == 9.9 * 0.75
 
 
@@ -190,7 +190,7 @@ def test_shufersal_promo_type_10_1():
         discount_rate=discount_rate,
         discounted_price=discounted_price
     )
-    item = Item('טופו טעם טבעי  300 גרם', 10.9, '', '7296073345763')
+    item = Item('טופו טעם טבעי  300 גרם', 10.9, 1, '7296073345763', '')
     assert promo_func(item) == 5
 
 
@@ -209,7 +209,7 @@ def test_shufersal_promo_type_10_2():
         discount_rate=discount_rate,
         discounted_price=discounted_price
     )
-    item = Item('טופו טעם טבעי  300 גרם', 10.9, 'כפרי בריא משק ויילר', '7296073345763')
+    item = Item('טופו טעם טבעי  300 גרם', 10.9, 1, '7296073345763', 'כפרי בריא משק ויילר')
     assert promo_func(item) == 7
 
 
@@ -225,7 +225,7 @@ def assert_discount(discounted_price, item_barcode, item_manufacturer, item_name
         discount_rate=discount_rate,
         discounted_price=discounted_price
     )
-    item = Item(item_name, orig_price, item_manufacturer, item_barcode)
+    item = Item(item_name, orig_price, 1, item_barcode, item_manufacturer)
     assert abs(promo_func(item) - price_after_discount) <= 1e-5, promo_description
 
 

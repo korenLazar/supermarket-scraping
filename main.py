@@ -102,7 +102,7 @@ if __name__ == '__main__':
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 
     chain: SupermarketChain = chain_dict[args.chain]
 
