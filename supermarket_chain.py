@@ -84,10 +84,10 @@ class SupermarketChain(object, metaclass=Meta):
         """
         This method scrapes supermarket's website and returns a url containing the data for a given store and category.
 
-        :param session:
-        :param store_id: A given id of a store
+        :param store_id: A given ID of a store
         :param category: A given category
         :return: A downloadable link of the  data for a given store and category
+        :param session: A given session object
         """
         pass
 
