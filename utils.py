@@ -4,9 +4,10 @@ import logging
 import zipfile
 from argparse import ArgumentTypeError
 from datetime import datetime
-from typing import AnyStr, Dict
+from typing import AnyStr, Dict, List
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from os import path
 
 from item import Item
@@ -31,8 +32,8 @@ def xml_file_gen(chain: SupermarketChain, store_id: int, category_name: str) -> 
     return path.join(RAW_FILES_DIRNAME, f"{repr(type(chain))}-{category_name}{store_id_str}.xml")
 
 
-def create_bs_object(xml_path: str, chain: SupermarketChain, store_id: int, load_xml: bool,
-                     category: SupermarketChain.XMLFilesCategory) -> BeautifulSoup:
+def create_bs_object(chain: SupermarketChain, store_id: int, category: SupermarketChain.XMLFilesCategory,
+                     load_xml: bool, xml_path: str) -> BeautifulSoup:
     """
     This function creates a BeautifulSoup (BS) object according to the given parameters.
     In case the given load_xml is True and the XML file exists, the function creates the BS object from the given
@@ -47,12 +48,12 @@ def create_bs_object(xml_path: str, chain: SupermarketChain, store_id: int, load
     :return: A BeautifulSoup object with xml content.
     """
     if load_xml and path.isfile(xml_path):
-        return create_bs_object_from_xml(xml_path)
-    return create_bs_object_from_link(xml_path, chain, category, store_id)
+        return get_bs_object_from_xml(xml_path)
+    return get_bs_object_from_link(chain, store_id, category, xml_path)
 
 
-def create_bs_object_from_link(xml_path: str, chain: SupermarketChain, category: SupermarketChain.XMLFilesCategory,
-                               store_id: int) -> BeautifulSoup:
+def get_bs_object_from_link(chain: SupermarketChain, store_id: int, category: SupermarketChain.XMLFilesCategory,
+                            xml_path: str) -> BeautifulSoup:
     """
     This function creates a BeautifulSoup (BS) object by generating a download link from Shufersal's API.
 
@@ -63,7 +64,7 @@ def create_bs_object_from_link(xml_path: str, chain: SupermarketChain, category:
     :return: A BeautifulSoup object with xml content.
     """
     session = requests.Session()
-    download_url: str = chain.get_download_url(store_id, category, session)
+    download_url = chain.get_download_url(store_id, category, session)
     response_content = session.get(download_url).content
     try:
         xml_content: AnyStr = gzip.decompress(response_content)
@@ -77,7 +78,7 @@ def create_bs_object_from_link(xml_path: str, chain: SupermarketChain, category:
     return BeautifulSoup(xml_content, features='xml')
 
 
-def create_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
+def get_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
     """
     This function creates a BeautifulSoup (BS) object from a given XML file.
 
@@ -88,17 +89,23 @@ def create_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
         return BeautifulSoup(f_in, features='xml')
 
 
-def create_items_dict(chain: SupermarketChain, load_xml, store_id: int) -> Dict[str, Item]:
+def create_items_dict(chain: SupermarketChain, store_id: int, load_xml) -> Dict[str, Item]:
     """
     This function creates a dictionary where every key is an item code and its value is its corresponding Item instance.
+    We take both full and not full prices files, and assume that the no full is more updated (in case of overwriting).
 
     :param chain: A given supermarket chain
     :param load_xml: A boolean representing whether to load an existing prices xml file
     :param store_id: A given store id
     """
-    xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PricesFull.name)
-    bs_prices: BeautifulSoup = create_bs_object(xml_path, chain, store_id, load_xml, chain.XMLFilesCategory.PricesFull)
-    return {item.find('ItemCode').text: chain.get_item_info(item) for item in bs_prices.find_all(chain.item_tag_name)}
+    items_dict = dict()
+    for category in [chain.XMLFilesCategory.PricesFull, chain.XMLFilesCategory.Prices]:
+        xml_path: str = xml_file_gen(chain, store_id, category.name)
+        bs_prices: BeautifulSoup = create_bs_object(chain, store_id, category, load_xml, xml_path)
+        items_tags = bs_prices.find_all(chain.item_tag_name)
+        items_dict.update({item.find('ItemCode').text: chain.get_item_info(item) for item in items_tags})
+
+    return items_dict
 
 
 def log_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, product_name: str) -> None:
@@ -110,18 +117,12 @@ def log_products_prices(chain: SupermarketChain, store_id: int, load_xml: bool, 
     :param product_name: A given product name
     :param load_xml: A boolean representing whether to load an existing xml or load an already saved one
     """
-    xml_path: str = xml_file_gen(chain, store_id, chain.XMLFilesCategory.PricesFull.name)
-    bs_prices: BeautifulSoup = create_bs_object(xml_path, chain, store_id, load_xml, chain.XMLFilesCategory.PricesFull)
-    prods = [item for item in bs_prices.find_all("Item") if product_name in item.find("ItemName").text]
-    prods.sort(key=lambda x: float(x.find("UnitOfMeasurePrice").text))
-    for prod in prods:
-        logging.info(
-            (
-                prod.find('ItemName').text[::-1],
-                prod.find('ManufacturerName').text[::-1],
-                prod.find('ItemPrice').text
-            )
-        )
+    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_xml)
+    products_by_name = [item for item in items_dict.values() if product_name in item.name]
+    products_by_name_sorted_by_price = sorted(products_by_name, key=lambda item: item.price_by_measure)
+
+    for prod in products_by_name_sorted_by_price:
+        logging.info(prod)
 
 
 def get_float_from_tag(tag, int_tag) -> int:
