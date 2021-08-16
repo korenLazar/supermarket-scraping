@@ -8,6 +8,8 @@ import csv
 import sys
 import pandas as pd
 import xlsxwriter
+from tqdm import tqdm
+
 from item import Item
 from utils import (
     create_bs_object, create_items_dict,
@@ -177,7 +179,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
 
     log_message_and_time_if_debug('Creating promotions objects')
     promo_objs = list()
-    for promo in promo_tags:
+    for promo in tqdm(promo_tags, desc='creating_promotions'):
         promotion_id = int(promo.find(re.compile('PromotionId', re.IGNORECASE)).text)
         if promo_objs and promo_objs[-1].promotion_id == promotion_id:
             promo_objs[-1].items.extend(chain.get_items(promo, items_dict))
@@ -335,7 +337,7 @@ def get_all_promos_tags(chain: SupermarketChain, store_id: int, load_xml: bool) 
     :return: A list of promotions tags
     """
     bs_objects = list()
-    for category in XML_FILES_PROMOTIONS_CATEGORIES:
+    for category in tqdm(XML_FILES_PROMOTIONS_CATEGORIES, desc='promotions_files'):
         xml_path = xml_file_gen(chain, store_id, category.name)
         bs_objects.append(create_bs_object(chain, store_id, category, load_xml, xml_path))
 

@@ -9,6 +9,8 @@ import requests
 from bs4 import BeautifulSoup
 from os import path
 
+from tqdm import tqdm
+
 from item import Item
 from supermarket_chain import SupermarketChain
 
@@ -98,7 +100,7 @@ def create_items_dict(chain: SupermarketChain, store_id: int, load_xml) -> Dict[
     :param store_id: A given store id
     """
     items_dict = dict()
-    for category in [chain.XMLFilesCategory.PricesFull, chain.XMLFilesCategory.Prices]:
+    for category in tqdm([chain.XMLFilesCategory.PricesFull, chain.XMLFilesCategory.Prices], desc='prices_files'):
         xml_path: str = xml_file_gen(chain, store_id, category.name)
         bs_prices: BeautifulSoup = create_bs_object(chain, store_id, category, load_xml, xml_path)
         items_tags = bs_prices.find_all(chain.item_tag_name)
