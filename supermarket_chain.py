@@ -120,9 +120,6 @@ class SupermarketChain(object, metaclass=Meta):
         """
         This function returns a string containing important information about a given supermarket's product.
         """
-        return Item(
-            name=item.find(re.compile(r'ItemN[a]?m[e]?')).text,
-            price=float(item.find('ItemPrice').text),
-            manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text,
-            code=item.find('ItemCode').text
-        )
+        return Item(name=item.find(re.compile(r'ItemN[a]?m[e]?')).text, price=float(item.find('ItemPrice').text),
+                    price_by_measure=float(item.find('UnitOfMeasurePrice').text), code=item.find('ItemCode').text,
+                    manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text)
