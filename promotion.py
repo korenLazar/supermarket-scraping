@@ -59,6 +59,7 @@ class RewardType(Enum):
     SECOND_INSTANCE_SAME_DISCOUNT = 8
     SECOND_INSTANCE_DIFFERENT_DISCOUNT = 9
     DISCOUNT_IN_MULTIPLE_INSTANCES = 10
+    OTHER = 11
 
 
 class Promotion:
@@ -226,7 +227,11 @@ def create_new_promo_instance(chain: SupermarketChain, items_dict: Dict[str, Ite
                                          chain.date_hour_format)
     promo_update_time = datetime.strptime(promo.find(chain.promotion_update_tag_name).text,
                                           chain.update_date_format)
-    club_id = ClubID(int(promo.find(re.compile('ClubId', re.IGNORECASE)).text))
+    club_id = int(promo.find(re.compile('ClubId', re.IGNORECASE)).text)
+    if club_id in [club_id.value for club_id in ClubID]:
+        club_id = ClubID(club_id)
+    else:
+        club_id = ClubID(ClubID.אחר)
     multiple_discounts_allowed = bool(int(promo.find('AllowMultipleDiscounts').text))
     items = chain.get_items(promo, items_dict)
 
@@ -245,7 +250,7 @@ def get_discounted_price(promo):
 def get_discount_rate(discount_rate: Union[float, None], discount_in_percentage: bool):
     if discount_rate:
         if discount_in_percentage:
-            return int(discount_rate) * (10 ** -(len(str(discount_rate))))
+            return float(discount_rate) * (10 ** -(len(str(discount_rate))))
         return float(discount_rate)
 
 
@@ -272,6 +277,9 @@ def find_promo_function(reward_type: RewardType, remark: str, promo_description:
 
     if reward_type == RewardType.DISCOUNT_BY_THRESHOLD:
         return lambda item: item.price - discount_rate
+
+    if reward_type == RewardType.OTHER:
+        return lambda item: item.price
 
     if 'מחיר המבצע הינו המחיר לק"ג' in remark:
         return lambda item: discounted_price
