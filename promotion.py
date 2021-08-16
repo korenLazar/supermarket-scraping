@@ -21,6 +21,8 @@ from supermarket_chain import SupermarketChain
 XML_FILES_PROMOTIONS_CATEGORIES = [SupermarketChain.XMLFilesCategory.PromosFull,
                                    SupermarketChain.XMLFilesCategory.Promos]
 
+PROMOTION_COLS_NUM = 15  # The length of the list returned by get_promotion_row_for_table function
+
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
 PROMOTIONS_TABLE_HEADERS = [
