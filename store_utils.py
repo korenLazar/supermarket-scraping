@@ -15,16 +15,8 @@ def log_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
     :param city: A string representing the city of the requested store.
     """
     xml_path: str = xml_file_gen(chain, -1, chain.XMLFilesCategory.Stores.name)
-    bs_stores: BeautifulSoup = create_bs_object(xml_path, chain, -1, load_xml, chain.XMLFilesCategory.Stores)
+    bs_stores: BeautifulSoup = create_bs_object(chain, -1, chain.XMLFilesCategory.Stores, load_xml, xml_path)
 
     for store in bs_stores.find_all("STORE"):
         if store.find("CITY").text == city:
             logging.info((store.find("ADDRESS").text, store.find("STOREID").text, store.find("SUBCHAINNAME").text))
-
-
-def get_all_deals(chain):
-    xml_path: str = xml_file_gen(chain, -1, chain.XMLFilesCategory.Stores.name)
-    bs_stores: BeautifulSoup = create_bs_object(xml_path, chain, -1, True, chain.XMLFilesCategory.Stores)
-
-    return [int(store.find("STOREID").text) for store in bs_stores.find_all("STORE") if store.find("SUBCHAINID").text
-            == "2"]
