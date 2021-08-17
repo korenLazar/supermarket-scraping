@@ -8,11 +8,7 @@ import pandas as pd
 from chains.bareket import Bareket
 from chains.co_op import CoOp
 from chains.dor_alon import DorAlon
-from chains.freshmarket import Freshmarket
-from chains.hazi_hinam import HaziHinam
 from chains.keshet import Keshet
-from chains.maayan2000 import Maayan2000
-from chains.mahsaneiHashook import MahsaneiHashook
 from chains.shuk_hayir import ShukHayir
 from chains.stop_market import StopMarket
 from chains.tiv_taam import TivTaam
@@ -51,8 +47,6 @@ MIN_NUM_OF_PROMOS = 3
 def test_scraping():
     filename = 'temp.xlsx'
     for chain_name, chain in tqdm(chain_dict.items(), desc='chains'):
-        if chain_name in [repr(Maayan2000), repr(ZolVebegadol), repr(ShukHayir)]:
-            continue
         logging.info(f'Test scraping promotions from {chain_name}')
         if chain_name == repr(DorAlon):
             store_id = 501
@@ -73,12 +67,12 @@ def test_scraping():
                 output_filename=filename,
                 chain=chain,
                 load_promos=False,
-                load_xml=False
+                load_xml=False,
             )
             df = pd.read_excel(filename)
         except Exception as e:
             logging.error(e)
-            logging.info(f"Failed loading excel of {chain_name}")
+            logging.error(f"Failed loading excel of {chain_name}")
             raise
 
         assert df.shape[0] > MIN_NUM_OF_PROMOS and df.shape[1] == PROMOTION_COLS_NUM, f"Failed scraping {chain_name}"
