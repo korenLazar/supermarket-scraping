@@ -66,6 +66,8 @@ def get_bs_object_from_link(chain: SupermarketChain, store_id: int, category: Su
     """
     session = requests.Session()
     download_url: str = chain.get_download_url(store_id, category, session)
+    if not download_url:
+        return BeautifulSoup()
     response_content = session.get(download_url).content
     try:
         xml_content: AnyStr = gzip.decompress(response_content)
