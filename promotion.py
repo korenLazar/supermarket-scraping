@@ -1,13 +1,15 @@
 import logging
 import re
 from datetime import datetime
-from enum import Enum
 from typing import Dict, List, Union
 from bs4.element import Tag
 import csv
 import sys
 import pandas as pd
 import xlsxwriter
+from tqdm import tqdm
+from aenum import Enum
+
 from item import Item
 from utils import (
     create_bs_object, create_items_dict,
@@ -18,6 +20,8 @@ from supermarket_chain import SupermarketChain
 
 XML_FILES_PROMOTIONS_CATEGORIES = [SupermarketChain.XMLFilesCategory.PromosFull,
                                    SupermarketChain.XMLFilesCategory.Promos]
+
+PROMOTION_COLS_NUM = 15  # The length of the list returned by get_promotion_row_for_table function
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
@@ -41,10 +45,19 @@ PROMOTIONS_TABLE_HEADERS = [
 
 
 class ClubID(Enum):
-    מבצע_רגיל = 0
-    מועדון = 1
-    כרטיס_אשראי = 2
-    אחר = 3
+    _init_ = 'value string'
+
+    REGULAR = 0, 'מבצע רגיל'
+    CLUB = 1, 'מועדון'
+    CREDIT_CARD = 2, 'כרטיס אשראי'
+    OTHER = 3, 'אחר'
+
+    @classmethod
+    def _missing_(cls, value):
+        return ClubID.OTHER
+
+    def __str__(self):
+        return self.string
 
 
 class RewardType(Enum):
@@ -57,6 +70,7 @@ class RewardType(Enum):
     SECOND_INSTANCE_SAME_DISCOUNT = 8
     SECOND_INSTANCE_DIFFERENT_DISCOUNT = 9
     DISCOUNT_IN_MULTIPLE_INSTANCES = 10
+    OTHER = 11
 
 
 class Promotion:
@@ -90,15 +104,15 @@ class Promotion:
         return self.promotion_id == other.promotion_id
 
 
-def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -> None:
+def write_promotions_to_table(promotions: List[Promotion], output_filename: str) -> None:
     """
-    This function writes a promotions table to a given CSV or XLSX output file.
+    This function writes a List of promotions to a csv or xlsx output file.
 
     :param promotions: A given list of promotions
     :param output_filename: A given file to write to
     """
     log_message_and_time_if_debug('Writing promotions to output file')
-    rows = [get_promotion_row_for_csv(promo, item) for promo in promotions for item in promo.items]
+    rows = [get_promotion_row_for_table(promo, item) for promo in promotions for item in promo.items]
     if output_filename.endswith('.csv'):
         encoding_file = "utf_8_sig" if sys.platform == "win32" else "utf_8"
         with open(output_filename, mode='w', newline='', encoding=encoding_file) as f_out:
@@ -135,28 +149,30 @@ def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -
         raise ValueError(f"The given output file has an invalid extension:\n{output_filename}")
 
 
-def get_promotion_row_for_csv(promo: Promotion, item: Item):
+def get_promotion_row_for_table(promo: Promotion, item: Item) -> List:
     """
     This function returns a row in the promotions XLSX table.
 
     :param promo: A given Promotion object
     :param item: A given item object participating in the promotion
     """
-    return [promo.content,
-            item.name,
-            item.price,
-            promo.promo_func(item),
-            (item.price - promo.promo_func(item)) / item.price,
-            promo.club_id.name.replace('_', ' '),
-            promo.max_qty,
-            promo.allow_multiple_discounts,
-            promo.start_date <= datetime.now(),
-            promo.start_date,
-            promo.end_date,
-            promo.update_date,
-            item.manufacturer,
-            item.code,
-            promo.reward_type.value]
+    return [
+        promo.content,
+        item.name,
+        item.price,
+        promo.promo_func(item),
+        (item.price - promo.promo_func(item)) / max(item.price, 1),
+        promo.club_id.string,
+        promo.max_qty,
+        promo.allow_multiple_discounts,
+        promo.start_date <= datetime.now(),
+        promo.start_date,
+        promo.end_date,
+        promo.update_date,
+        item.manufacturer,
+        item.code,
+        promo.reward_type.value,
+    ]
 
 
 def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bool, load_promos: bool) \
@@ -177,7 +193,7 @@ def get_available_promos(chain: SupermarketChain, store_id: int, load_prices: bo
 
     log_message_and_time_if_debug('Creating promotions objects')
     promo_objs = list()
-    for promo in promo_tags:
+    for promo in tqdm(promo_tags, desc='creating_promotions'):
         promotion_id = int(promo.find(re.compile('PromotionId', re.IGNORECASE)).text)
         if promo_objs and promo_objs[-1].promotion_id == promotion_id:
             promo_objs[-1].items.extend(chain.get_items(promo, items_dict))
@@ -243,7 +259,7 @@ def get_discounted_price(promo):
 def get_discount_rate(discount_rate: Union[float, None], discount_in_percentage: bool):
     if discount_rate:
         if discount_in_percentage:
-            return int(discount_rate) * (10 ** -(len(str(discount_rate))))
+            return float(discount_rate) * (10 ** -(len(str(discount_rate))))
         return float(discount_rate)
 
 
@@ -271,6 +287,9 @@ def find_promo_function(reward_type: RewardType, remark: str, promo_description:
     if reward_type == RewardType.DISCOUNT_BY_THRESHOLD:
         return lambda item: item.price - discount_rate
 
+    if reward_type == RewardType.OTHER:
+        return lambda item: item.price
+
     if 'מחיר המבצע הינו המחיר לק"ג' in remark:
         return lambda item: discounted_price
 
@@ -294,7 +313,7 @@ def main_latest_promos(store_id: int, output_filename, chain: SupermarketChain, 
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
-    write_promotions_to_csv(promotions, output_filename)
+    write_promotions_to_table(promotions, output_filename)
 
 
 def log_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):
@@ -313,7 +332,6 @@ def log_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
             logging.info(promo.repr_ltr())
 
 
-# TODO: change to returning list of Items
 def get_all_null_items_in_promos(chain, store_id) -> List[str]:
     """
     This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
@@ -335,7 +353,7 @@ def get_all_promos_tags(chain: SupermarketChain, store_id: int, load_xml: bool) 
     :return: A list of promotions tags
     """
     bs_objects = list()
-    for category in XML_FILES_PROMOTIONS_CATEGORIES:
+    for category in tqdm(XML_FILES_PROMOTIONS_CATEGORIES, desc='promotions_files'):
         xml_path = xml_file_gen(chain, store_id, category.name)
         bs_objects.append(create_bs_object(chain, store_id, category, load_xml, xml_path))
 

@@ -1,7 +1,11 @@
 import json
+import re
+
 import requests
 
 from supermarket_chain import SupermarketChain
+
+FNAME_KEY = "FileNm"
 
 
 class BinaProjectWebClient:
@@ -16,8 +20,16 @@ class BinaProjectWebClient:
         url = '/'.join([hostname, self.path_prefix, "MainIO_Hok.aspx"])
         req_res: requests.Response = session.get(url)
         jsons_files = json.loads(req_res.text)
-        suffix = next(cur_json["FileNm"] for cur_json in jsons_files if f'-{store_id:03d}-20' in cur_json["FileNm"]
-                      and category.name.replace('s', '') in cur_json["FileNm"])
+
+        if category in [SupermarketChain.XMLFilesCategory.Promos, SupermarketChain.XMLFilesCategory.Prices]:
+            filter_func = lambda fname: f'-{store_id:03d}-20' in fname and category.name.replace('s', '') in fname \
+                                        and not re.search('full', fname, re.IGNORECASE)
+            if not any(filter_func(cur_json[FNAME_KEY]) for cur_json in jsons_files):
+                return ""  # Could not find non-full Promos/Prices file
+        else:
+            filter_func = lambda fname: f'-{store_id:03d}-20' in fname and category.name.replace('s', '') in fname
+        suffix = next(
+            cur_json[FNAME_KEY] for cur_json in jsons_files if filter_func(cur_json[FNAME_KEY]))
         down_url: str = '/'.join([hostname, self.path_prefix, "Download", suffix])
         return down_url
 
