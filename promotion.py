@@ -1,7 +1,6 @@
 import logging
 import re
 from datetime import datetime
-from enum import Enum
 from typing import Dict, List, Union
 from bs4.element import Tag
 import csv
@@ -9,6 +8,7 @@ import sys
 import pandas as pd
 import xlsxwriter
 from tqdm import tqdm
+from aenum import Enum
 
 from item import Item
 from utils import (
@@ -45,10 +45,19 @@ PROMOTIONS_TABLE_HEADERS = [
 
 
 class ClubID(Enum):
-    מבצע_רגיל = 0
-    מועדון = 1
-    כרטיס_אשראי = 2
-    אחר = 3
+    _init_ = 'value string'
+
+    REGULAR = 0, 'מבצע רגיל'
+    CLUB = 1, 'מועדון'
+    CREDIT_CARD = 2, 'כרטיס אשראי'
+    OTHER = 3, 'אחר'
+
+    @classmethod
+    def _missing_(cls, value):
+        return ClubID.OTHER
+
+    def __str__(self):
+        return self.string
 
 
 class RewardType(Enum):
@@ -153,7 +162,7 @@ def get_promotion_row_for_table(promo: Promotion, item: Item) -> List:
         item.price,
         promo.promo_func(item),
         (item.price - promo.promo_func(item)) / max(item.price, 1),
-        promo.club_id.name.replace('_', ' '),
+        promo.club_id.string,
         promo.max_qty,
         promo.allow_multiple_discounts,
         promo.start_date <= datetime.now(),
@@ -231,11 +240,7 @@ def create_new_promo_instance(chain: SupermarketChain, items_dict: Dict[str, Ite
                                          chain.date_hour_format)
     promo_update_time = datetime.strptime(promo.find(chain.promotion_update_tag_name).text,
                                           chain.update_date_format)
-    club_id = int(promo.find(re.compile('ClubId', re.IGNORECASE)).text)
-    if club_id in [club_id.value for club_id in ClubID]:
-        club_id = ClubID(club_id)
-    else:
-        club_id = ClubID(ClubID.אחר)
+    club_id = ClubID(int(promo.find(re.compile('ClubId', re.IGNORECASE)).text))
     multiple_discounts_allowed = bool(int(promo.find('AllowMultipleDiscounts').text))
     items = chain.get_items(promo, items_dict)
 
