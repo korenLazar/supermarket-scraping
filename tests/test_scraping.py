@@ -47,12 +47,12 @@ MIN_NUM_OF_PROMOS = 3
 
 def test_searching_for_download_urls():
     """
-    Test that get_download_url of each chain returns the correct download url for each category:
+    Test that get_download_url of each chain returns the correct download url for each category in every chain.
     """
     session = requests.Session()
     for chain_name, chain in tqdm(chain_dict.items(), desc='chains'):
 
-        logging.info(f'Finding download url in chain {chain_name}')
+        logging.info(f'Checking download urls in chain {chain_name}')
         store_id: int = valid_store_id_by_chain(chain_name)
 
         _test_download_url_helper(chain, store_id, chain.XMLFilesCategory.PromosFull, r'promo[s]?full', session)
@@ -64,9 +64,9 @@ def test_searching_for_download_urls():
 def _test_download_url_helper(chain: SupermarketChain, store_id: int, category: SupermarketChain.XMLFilesCategory,
                               regex_pat: str, session: requests.session):
     download_url: str = chain.get_download_url(store_id, category, session)
-    logging.debug(download_url)
     if not download_url:  # Not found non-full Promos/Prices file
         return
+    logging.debug(download_url)
     assert re.search(regex_pat, download_url, re.IGNORECASE), f'Invalid {category.name} url in {repr(type(chain))}'
     if category in [chain.XMLFilesCategory.Prices, chain.XMLFilesCategory.Promos]:
         assert not re.search('full', download_url, re.IGNORECASE), \

@@ -104,9 +104,9 @@ class Promotion:
         return self.promotion_id == other.promotion_id
 
 
-def write_promotions_to_csv(promotions: List[Promotion], output_filename: str) -> None:
+def write_promotions_to_table(promotions: List[Promotion], output_filename: str) -> None:
     """
-    This function writes a promotions table to a given CSV or XLSX output file.
+    This function writes a List of promotions to a csv or xlsx output file.
 
     :param promotions: A given list of promotions
     :param output_filename: A given file to write to
@@ -313,7 +313,7 @@ def main_latest_promos(store_id: int, output_filename, chain: SupermarketChain, 
     promotions: List[Promotion] = get_available_promos(chain, store_id, load_xml, load_promos)
     promotions.sort(key=lambda promo: (max(promo.update_date.date(), promo.start_date.date()), promo.start_date -
                                        promo.end_date), reverse=True)
-    write_promotions_to_csv(promotions, output_filename)
+    write_promotions_to_table(promotions, output_filename)
 
 
 def log_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, load_prices: bool, load_promos: bool):
@@ -332,7 +332,6 @@ def log_promos_by_name(store_id: int, chain: SupermarketChain, promo_name: str, 
             logging.info(promo.repr_ltr())
 
 
-# TODO: change to returning list of Items
 def get_all_null_items_in_promos(chain, store_id) -> List[str]:
     """
     This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
