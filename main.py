@@ -36,6 +36,7 @@ Path(RAW_FILES_DIRNAME).mkdir(exist_ok=True)
 
 chain_dict = {repr(chain): chain() if callable(chain) else None for chain in SupermarketChain.__subclasses__()}
 
+# TODO: change functions arguments to include all necessary parameters (e.g. chain) or split arguments
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--promos',
