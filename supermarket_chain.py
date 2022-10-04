@@ -1,10 +1,9 @@
-import re
 from abc import abstractmethod
-from enum import Enum
 from argparse import ArgumentTypeError
 from typing import Dict, List
 
 import requests
+from aenum import StrEnum
 from bs4.element import Tag
 
 from item import Item
@@ -20,18 +19,24 @@ class SupermarketChain(object, metaclass=Meta):
     A class representing a supermarket chain.
     """
 
-    class XMLFilesCategory(Enum):
+    class XMLFilesCategory(StrEnum):
         """
         An enum class of different XML files produced by a supermarket chain
         """
-        All, Prices, PricesFull, Promos, PromosFull, Stores = range(6)
 
-    _promotion_tag_name = 'Promotion'
-    _promotion_update_tag_name = 'PromotionUpdateDate'
-    _date_format = '%Y-%m-%d'
-    _date_hour_format = '%Y-%m-%d %H:%M'
-    _update_date_format = '%Y-%m-%d %H:%M'
-    _item_tag_name = 'Item'
+        All = ("All",)
+        Prices = ("price",)
+        PricesFull = ("pricefull",)
+        Promos = ("promo",)
+        PromosFull = ("promofull",)
+        Stores = "store"
+
+    _promotion_tag_name = "Promotion"
+    _promotion_update_tag_name = "PromotionUpdateDate"
+    _date_format = "%Y-%m-%d"
+    _date_hour_format = "%Y-%m-%d %H:%M"
+    _update_date_format = "%Y-%m-%d %H:%M"
+    _item_tag_name = "Item"
 
     @property
     def promotion_tag_name(self):
@@ -75,14 +80,19 @@ class SupermarketChain(object, metaclass=Meta):
         :return: The given store_id if valid, else raise an ArgumentTypeError.
         """
         if not SupermarketChain.is_valid_store_id(int(store_id)):
-            raise ArgumentTypeError(f"Given store_id: {store_id} is not a valid store_id.")
+            raise ArgumentTypeError(
+                f"Given store_id: {store_id} is not a valid store_id."
+            )
         return store_id
 
     @staticmethod
     @abstractmethod
-    def get_download_url(store_id: int, category: XMLFilesCategory, session: requests.Session) -> str:
+    def get_download_url_or_path(
+        store_id: int, category: XMLFilesCategory, session: requests.Session
+    ) -> str:
         """
-        This method scrapes supermarket's website and returns a url containing the data for a given store and category.
+        This method scrapes the supermarket's website and according to the given store id and category,
+        it returns a url containing the data or or a path to a gz file containing the data.
 
         :param store_id: A given ID of a store
         :param category: A given category
@@ -100,8 +110,8 @@ class SupermarketChain(object, metaclass=Meta):
         :param items_dict: A given dictionary of products
         """
         items = list()
-        for item in promo.find_all('Item'):
-            item_code = item.find('ItemCode').text
+        for item in promo.find_all("Item"):
+            item_code = item.find("ItemCode").text
             full_item_info = items_dict.get(item_code)
             if full_item_info:
                 items.append(full_item_info)
@@ -112,14 +122,8 @@ class SupermarketChain(object, metaclass=Meta):
         """
         This function returns all the items in a given promotion which do not appear in the given items_dict.
         """
-        return [item.find('ItemCode').text for item in promo.find_all('Item')
-                if not items_dict.get(item.find('ItemCode').text)]
-
-    @staticmethod
-    def get_item_info(item: Tag) -> Item:
-        """
-        This function returns a string containing important information about a given supermarket's product.
-        """
-        return Item(name=item.find(re.compile(r'ItemN[a]?m[e]?')).text, price=float(item.find('ItemPrice').text),
-                    price_by_measure=float(item.find('UnitOfMeasurePrice').text), code=item.find('ItemCode').text,
-                    manufacturer=item.find(re.compile(r'Manufacture[r]?Name')).text)
+        return [
+            item.find("ItemCode").text
+            for item in promo.find_all("Item")
+            if not items_dict.get(item.find("ItemCode").text)
+        ]
