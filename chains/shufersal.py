@@ -7,7 +7,7 @@ from supermarket_chain import SupermarketChain
 class Shufersal(SupermarketChain):
 
     @staticmethod
-    def get_download_url(store_id: int, category: SupermarketChain.XMLFilesCategory, session: requests.Session) -> str:
+    def get_download_url_or_path(store_id: int, category: SupermarketChain.XMLFilesCategory, session: requests.Session) -> str:
         url = f"http://prices.shufersal.co.il/FileObject/UpdateCategory?catID={category.value}"
         if SupermarketChain.is_valid_store_id(int(store_id)):
             url += f"&storeId={store_id}"
