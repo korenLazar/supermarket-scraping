@@ -41,7 +41,7 @@ class CerberusWebClient(SupermarketChain):
         time.sleep(2)
 
         searchElem = driver.find_element(By.CLASS_NAME, "form-control")
-        searchElem.send_keys(category.value)
+        searchElem.send_keys(category.value.lower().replace('s', ''))
         time.sleep(5)
 
         conns = driver.find_elements(By.CLASS_NAME, "f")

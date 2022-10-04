@@ -3,7 +3,7 @@ from argparse import ArgumentTypeError
 from typing import Dict, List
 
 import requests
-from aenum import StrEnum
+from aenum import Enum
 from bs4.element import Tag
 
 from item import Item
@@ -19,17 +19,12 @@ class SupermarketChain(object, metaclass=Meta):
     A class representing a supermarket chain.
     """
 
-    class XMLFilesCategory(StrEnum):
+    class XMLFilesCategory(Enum):
         """
         An enum class of different XML files produced by a supermarket chain
         """
 
-        All = ("All",)
-        Prices = ("price",)
-        PricesFull = ("pricefull",)
-        Promos = ("promo",)
-        PromosFull = ("promofull",)
-        Stores = "store"
+        All, Prices, PricesFull, Promos, PromosFull, Stores = range(6)
 
     _promotion_tag_name = "Promotion"
     _promotion_update_tag_name = "PromotionUpdateDate"
