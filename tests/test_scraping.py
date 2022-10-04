@@ -114,7 +114,7 @@ def valid_store_id_by_chain(chain_name) -> int:
         store_id = 2
     elif chain_name == repr(CoOp):
         store_id = 202
-    elif chain_name == [repr(ShukHayir), repr(ZolVebegadol)]:
+    elif chain_name in [repr(ShukHayir), repr(ZolVebegadol)]:
         store_id = 4
     elif chain_name in [repr(StopMarket), repr(Keshet)]:
         store_id = 5
