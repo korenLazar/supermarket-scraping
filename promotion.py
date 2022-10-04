@@ -229,6 +229,8 @@ def get_available_promos(
             continue
 
         promo_inst = create_new_promo_instance(chain, items_dict, promo, promotion_id)
+        if len(promo_inst.items) > 1000:  # Too many items -> probably illegal promotion
+            continue
         if promo_inst:
             promo_objs.append(promo_inst)
 
@@ -405,17 +407,22 @@ def get_all_prices(
     promo_obj = None
     for promo in tqdm(promo_tags, desc="creating_promotions"):
         promotion_id = int(promo.find(re.compile("PromotionId", re.IGNORECASE)).text)
+
         if promo_obj is None or promo_obj.promotion_id != promotion_id:
             promo_obj = create_new_promo_instance(
                 chain, items_dict, promo, promotion_id
             )
-        for item in promo.find_all("Item"):
-            item_code = item.find("ItemCode").text
-            cur_item = items_dict.get(item_code)
-            if cur_item is not None:
-                discounted_price = promo_obj.promo_func(cur_item)
-                if cur_item.price > discounted_price:
-                    cur_item.final_price = discounted_price
+        if promo_obj.club_id == ClubID.REGULAR:
+            promo_items = promo.find_all("Item")
+            if len(promo_items) > 1000:  # Too many items -> probably illegal promotion
+                continue
+            for item in promo_items:
+                item_code = item.find("ItemCode").text
+                cur_item = items_dict.get(item_code)
+                if cur_item is not None:
+                    discounted_price = promo_obj.promo_func(cur_item)
+                    if cur_item.price > discounted_price:
+                        cur_item.final_price = discounted_price
 
     return items_dict
 

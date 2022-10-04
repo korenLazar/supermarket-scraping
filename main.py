@@ -24,6 +24,7 @@ from chains.shuk_hayir import ShukHayir
 from chains.stop_market import StopMarket
 from chains.tiv_taam import TivTaam
 from chains.victory import Victory
+from chains.yeinot_bitan import YeinotBitan
 from chains.yohananof import Yohananof
 from chains.zol_vebegadol import ZolVebegadol
 from promotion import main_latest_promos, log_promos_by_name, get_all_prices
@@ -58,6 +59,7 @@ CHAINS_LIST = [
     ShukHayir,
     KingStore,
     ShefaBirkatHashem,
+    YeinotBitan,
 ]
 Path(RESULTS_DIRNAME).mkdir(exist_ok=True)
 Path(RAW_FILES_DIRNAME).mkdir(exist_ok=True)

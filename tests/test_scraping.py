@@ -14,6 +14,7 @@ from chains.keshet import Keshet
 from chains.shuk_hayir import ShukHayir
 from chains.stop_market import StopMarket
 from chains.tiv_taam import TivTaam
+from chains.yeinot_bitan import YeinotBitan
 from chains.zol_vebegadol import ZolVebegadol
 from main import CHAINS_DICT
 from promotion import PROMOTION_COLS_NUM, main_latest_promos
@@ -32,7 +33,6 @@ def test_searching_for_download_urls(chain_tuple):
     Test that get_download_url of each chain returns the correct download url for each category in every chain.
     """
     chain_name, chain = chain_tuple
-    # for chain_name, chain in tqdm(chain_dict.items(), desc='chains'):
 
     logging.info(f"Checking download urls in chain {chain_name}")
     store_id: int = valid_store_id_by_chain(chain_name)
@@ -118,6 +118,8 @@ def valid_store_id_by_chain(chain_name) -> int:
         store_id = 4
     elif chain_name in [repr(StopMarket), repr(Keshet)]:
         store_id = 5
+    elif chain_name == repr(YeinotBitan):
+        store_id = 3700
     else:
         store_id = 1
     return store_id
