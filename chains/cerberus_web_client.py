@@ -28,7 +28,7 @@ class CerberusWebClient(SupermarketChain):
     
     def set_browser_options(self) -> webdriver.ChromeOptions:
         options = webdriver.ChromeOptions()
-        options.set_capability("download.default_directory", f"{os.path.abspath(os.path.curdir)}/raw_files")
+        options.add_experimental_option("prefs",{"download.default_directory": self.download_dir})
         options.add_argument("ignore-certificate-errors")
         options.add_argument("--ignore-ssl-errors=yes")
         options.headless = self.is_system_headless()
