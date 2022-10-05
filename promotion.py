@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 from datetime import datetime
 from typing import Dict, List, Union
 from bs4.element import Tag
@@ -19,6 +20,8 @@ from utils import (
     xml_file_gen,
 )
 from supermarket_chain import SupermarketChain
+from utils import (create_bs_object, create_items_dict, get_float_from_tag,
+                   xml_file_gen)
 
 XML_FILES_PROMOTIONS_CATEGORIES = [
     SupermarketChain.XMLFilesCategory.PromosFull,

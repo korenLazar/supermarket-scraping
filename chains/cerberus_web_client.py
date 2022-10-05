@@ -1,6 +1,8 @@
 import logging
 import os
 import shutil
+import platform
+import sys
 import time
 from abc import abstractmethod
 
@@ -18,6 +20,26 @@ class CerberusWebClient(SupermarketChain):
     @abstractmethod
     def username(self):
         pass
+    
+    download_dir = f"{os.path.abspath(os.path.curdir)}/raw_files"
+    
+    def is_system_headless(self) -> bool:
+        return sys.platform == "linux" and not os.environ.get("DISPLAY")
+    
+    def set_browser_options(self) -> webdriver.ChromeOptions:
+        options = webdriver.ChromeOptions()
+        options.set_capability("download.default_directory", f"{os.path.abspath(os.path.curdir)}/raw_files")
+        options.add_argument("ignore-certificate-errors")
+        options.add_argument("--ignore-ssl-errors=yes")
+        options.headless = self.is_system_headless()
+        return options
+
+    def set_browser(self,options: webdriver.ChromeOptions) -> webdriver.Chrome:
+        if self.is_system_headless() and platform.machine() == 'aarch64':
+            return webdriver.Chrome(service=Service('/usr/bin/chromedriver'), options=options)
+        return webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=options
+        )
 
     def get_download_url_or_path(
         self,
@@ -25,25 +47,17 @@ class CerberusWebClient(SupermarketChain):
         category: SupermarketChain.XMLFilesCategory,
         session: requests.Session,
     ) -> str:
-        options = webdriver.ChromeOptions()
-        options.add_argument("ignore-certificate-errors")
-        options.add_argument("--ignore-ssl-errors=yes")
-
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()), options=options
-        )
-
+        options=self.set_browser_options()
+        driver = self.set_browser(options)
         driver.get("https://url.retail.publishedprices.co.il/login#")
         time.sleep(2)
         userElem = driver.find_element(By.NAME, "username")
         userElem.send_keys(self.username)
         driver.find_element(By.NAME, "Submit").click()
         time.sleep(2)
-
         searchElem = driver.find_element(By.CLASS_NAME, "form-control")
-        searchElem.send_keys(category.value.lower().replace('s', ''))
+        searchElem.send_keys(category.name.lower().replace('s', ''))
         time.sleep(5)
-
         conns = driver.find_elements(By.CLASS_NAME, "f")
         best_link = ""
         for conn in conns:
@@ -85,9 +99,9 @@ class CerberusWebClient(SupermarketChain):
             return ""
         driver.get(best_link)
         time.sleep(3)
-        download_dir = "/Users/korenlazar/Downloads"
-        filename = best_link[48:]
-        path_download = os.path.join(download_dir, filename)
+        filename = best_link.split("/")[-1] # don't be an idiot. it is stupid to count letters
+                                            # split and grab, or rename it by yourself.
+        path_download = os.path.join(self.download_dir, filename)
         logging.info(f"{path_download=}")
         path_to_save = f"raw_files/{self.username}-{filename}"
         try:

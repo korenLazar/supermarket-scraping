@@ -6,3 +6,6 @@ raw_files/
 results/
 all_deals.py
 unknown_items.csv
+helper_*
+.vscode/
+desktop.ini
