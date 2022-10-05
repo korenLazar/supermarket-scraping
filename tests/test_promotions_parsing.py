@@ -1,3 +1,5 @@
+import sys,os
+sys.path.append(os.path.abspath(os.curdir))
 from item import Item
 from promotion import RewardType, find_promo_function, get_discount_rate
 
