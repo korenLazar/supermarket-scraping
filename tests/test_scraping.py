@@ -10,6 +10,7 @@ import requests
 from chains.bareket import Bareket
 from chains.co_op import CoOp
 from chains.dor_alon import DorAlon
+from chains.hazi_hinam import HaziHinam
 from chains.keshet import Keshet
 from chains.shuk_hayir import ShukHayir
 from chains.stop_market import StopMarket
@@ -110,7 +111,7 @@ def valid_store_id_by_chain(chain_name) -> int:
     """
     if chain_name == repr(DorAlon):
         store_id = 501
-    elif chain_name in [repr(TivTaam), repr(Bareket)]:
+    elif chain_name in [repr(TivTaam), repr(Bareket), repr(HaziHinam)]:
         store_id = 2
     elif chain_name == repr(CoOp):
         store_id = 202

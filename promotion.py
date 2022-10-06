@@ -415,7 +415,7 @@ def get_all_prices(
             promo_obj = create_new_promo_instance(
                 chain, items_dict, promo, promotion_id
             )
-        if promo_obj.club_id == ClubID.REGULAR:
+        if promo_obj is not None and promo_obj.club_id == ClubID.REGULAR:
             promo_items = promo.find_all("Item")
             if len(promo_items) > 1000:  # Too many items -> probably illegal promotion
                 continue
