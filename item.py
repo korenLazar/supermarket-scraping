@@ -1,5 +1,6 @@
 import json
 import re
+from typing import List, Optional
 
 from bs4.element import Tag
 
@@ -16,6 +17,7 @@ class Item:
         price_by_measure: float,
         code: str,
         manufacturer: str,
+        promotions: Optional[List] = None,
     ):
         self.name: str = name
         self.price: float = price
@@ -23,6 +25,9 @@ class Item:
         self.price_by_measure = price_by_measure
         self.manufacturer: str = manufacturer
         self.code: str = code
+        self.promotions = (
+            promotions if promotions else []
+        )  # Promotions the item is participating in
 
     @classmethod
     def from_tag(cls, item: Tag):

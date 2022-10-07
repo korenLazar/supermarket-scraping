@@ -27,7 +27,7 @@ from chains.victory import Victory
 from chains.yeinot_bitan import YeinotBitan
 from chains.yohananof import Yohananof
 from chains.zol_vebegadol import ZolVebegadol
-from promotion import main_latest_promos, log_promos_by_name, get_all_prices
+from promotion import main_latest_promos, log_promos_by_name, get_all_prices_with_promos
 from store_utils import log_stores_ids
 from supermarket_chain import SupermarketChain
 from utils import (
@@ -177,9 +177,8 @@ if __name__ == "__main__":
                 load_prices=args.load_prices,
             )
         else:
-            items_dict = get_all_prices(
+            items_dict = get_all_prices_with_promos(
                 store_id=arg_store_id,
-                output_filename=output_filename,
                 chain=chain,
                 load_promos=args.load_promos,
                 load_prices=args.load_prices,
