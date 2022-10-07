@@ -13,8 +13,7 @@ from tqdm import tqdm
 
 from item import Item
 from supermarket_chain import SupermarketChain
-from utils import (create_bs_object, create_items_dict, get_float_from_tag,
-                   xml_file_gen)
+from utils import create_bs_object, create_items_dict, get_float_from_tag, xml_file_gen
 from utils import (
     log_message_and_time_if_debug,
 )
@@ -224,13 +223,17 @@ def get_available_promos(
     previous_promotion_id = -1
     cur_promo = None
     for promo_tag in tqdm(promo_tags, desc="creating_promotions"):
-        new_promotion_id = int(promo_tag.find(re.compile("PromotionId", re.IGNORECASE)).text)
+        new_promotion_id = int(
+            promo_tag.find(re.compile("PromotionId", re.IGNORECASE)).text
+        )
         if previous_promotion_id != new_promotion_id:  # New promotion
             if cur_promo is not None and is_valid_promo(cur_promo):
                 promo_objs.append(cur_promo)
 
             # Initialize a new promotion
-            cur_promo = create_new_promo_instance(chain, items_dict, promo_tag, new_promotion_id)
+            cur_promo = create_new_promo_instance(
+                chain, items_dict, promo_tag, new_promotion_id
+            )
             previous_promotion_id = new_promotion_id
         else:
             cur_promo.items.extend(chain.get_items(promo_tag, items_dict))
@@ -239,7 +242,11 @@ def get_available_promos(
 
 
 def is_valid_promo(promo: Promotion) -> bool:
-    return "קופון" not in promo.content and any([promo.promo_func(item) != item.price for item in promo.items[:50]]) and len(promo.items) < 1000
+    return (
+        "קופון" not in promo.content
+        and any([promo.promo_func(item) != item.price for item in promo.items[:50]])
+        and len(promo.items) < 1000
+    )
 
 
 def create_new_promo_instance(
@@ -396,7 +403,9 @@ def main_latest_promos(
     write_promotions_to_table(promotions, output_filename)
 
 
-def get_all_prices_with_promos(store_id: int, chain: SupermarketChain, load_promos: bool, load_prices: bool):
+def get_all_prices_with_promos(
+    store_id: int, chain: SupermarketChain, load_promos: bool, load_prices: bool
+):
     log_message_and_time_if_debug("Importing prices XML file")
     items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_prices)
     log_message_and_time_if_debug("Importing promotions XML file")
@@ -411,13 +420,22 @@ def get_all_prices_with_promos(store_id: int, chain: SupermarketChain, load_prom
             cur_promo = create_new_promo_instance(
                 chain, items_dict, promo_tag, promo_id
             )
-        if cur_promo is not None and cur_promo.club_id == ClubID.REGULAR and is_valid_promo(cur_promo):
+        if (
+            cur_promo is not None
+            and cur_promo.club_id == ClubID.REGULAR
+            and is_valid_promo(cur_promo)
+        ):
             for item in promo_tag.find_all("Item"):
                 cur_item = items_dict.get(item.find("ItemCode").text)
                 if cur_item is not None:
                     discounted_price = cur_promo.promo_func(cur_item)
                     if cur_item.price > discounted_price:
-                        cur_item.promotions.append({'content': cur_promo.content, 'discounted_price': discounted_price})
+                        cur_item.promotions.append(
+                            {
+                                "content": cur_promo.content,
+                                "discounted_price": discounted_price,
+                            }
+                        )
                     if cur_item.final_price > discounted_price:
                         cur_item.final_price = discounted_price
 
