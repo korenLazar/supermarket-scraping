@@ -4,6 +4,7 @@ import shutil
 import platform
 import sys
 import time
+import logging
 from abc import abstractmethod
 
 import requests
@@ -23,7 +24,7 @@ class CerberusWebClient(SupermarketChain):
     
     download_dir = f"{os.path.abspath(os.path.curdir)}/raw_files"
     
-    def is_system_headless(self) -> bool:
+    def is_linux_server(self) -> bool:
         return sys.platform == "linux" and not os.environ.get("DISPLAY")
     
     def set_browser_options(self) -> webdriver.ChromeOptions:
@@ -31,11 +32,11 @@ class CerberusWebClient(SupermarketChain):
         options.add_experimental_option("prefs",{"download.default_directory": self.download_dir})
         options.add_argument("ignore-certificate-errors")
         options.add_argument("--ignore-ssl-errors=yes")
-        options.headless = self.is_system_headless()
+        options.headless = logging.DEBUG != logging.root.level
         return options
 
     def set_browser(self,options: webdriver.ChromeOptions) -> webdriver.Chrome:
-        if self.is_system_headless() and platform.machine() == 'aarch64':
+        if self.is_linux_server() and platform.machine() == 'aarch64':
             return webdriver.Chrome(service=Service('/usr/bin/chromedriver'), options=options)
         return webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
