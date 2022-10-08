@@ -16,6 +16,7 @@ from tqdm import tqdm
 from item import Item
 from supermarket_chain import SupermarketChain
 
+
 RESULTS_DIRNAME = "results"
 RAW_FILES_DIRNAME = "raw_files"
 VALID_PROMOTION_FILE_EXTENSIONS = [".csv", ".xlsx"]
@@ -81,7 +82,9 @@ def get_bs_object_from_link(
     :return: A BeautifulSoup object with xml content.
     """
     session = requests.Session()
-    download_url_or_path: str = chain.get_download_url_or_path(store_id, category, session)
+    download_url_or_path: str = chain.get_download_url_or_path(
+        store_id, category, session
+    )
     if not download_url_or_path:
         return BeautifulSoup()
     if os.path.isfile(download_url_or_path):
@@ -114,7 +117,7 @@ def get_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
 
 
 def create_items_dict(
-    chain: SupermarketChain, store_id: int, load_xml
+    chain: SupermarketChain, store_id: int, load_xml, include_non_full_price_file: bool
 ) -> Dict[str, Item]:
     """
     This function creates a dictionary where every key is an item code and its value is its corresponding Item instance.
@@ -123,10 +126,14 @@ def create_items_dict(
     :param chain: A given supermarket chain
     :param load_xml: A boolean representing whether to load an existing prices xml file
     :param store_id: A given store id
+    :param include_non_full_price_file: Whether to include "Price" file as well or only "PriceFull" file
     """
     items_dict = dict()
+    price_file_types = [SupermarketChain.XMLFilesCategory.PricesFull]
+    if include_non_full_price_file:
+        price_file_types.append(SupermarketChain.XMLFilesCategory.Prices)
     for category in tqdm(
-        [chain.XMLFilesCategory.PricesFull, chain.XMLFilesCategory.Prices],
+        price_file_types,
         desc="prices_files",
     ):
         xml_path: str = xml_file_gen(chain, store_id, category.name)
@@ -155,7 +162,7 @@ def log_products_prices(
     :param product_name: A given product name
     :param load_xml: A boolean representing whether to load an existing xml or load an already saved one
     """
-    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_xml)
+    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_xml, True)
     products_by_name = [
         item for item in items_dict.values() if product_name in item.name
     ]

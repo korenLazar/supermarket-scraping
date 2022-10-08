@@ -18,7 +18,7 @@ from chains.tiv_taam import TivTaam
 from chains.yeinot_bitan import YeinotBitan
 from chains.zol_vebegadol import ZolVebegadol
 from main import CHAINS_DICT
-from promotion import PROMOTION_COLS_NUM, main_latest_promos
+from promotion import main_latest_promos, PROMOTIONS_TABLE_HEADERS
 from supermarket_chain import SupermarketChain
 
 pytest.main(args=["-s", os.path.abspath(__file__)])
@@ -90,6 +90,7 @@ def test_promotions_scraping(chain_tuple):
             chain=chain,
             load_promos=False,
             load_prices=False,
+            include_non_full_files=True,
         )
         df = pd.read_excel(tf.name)
     except Exception as e:
@@ -97,8 +98,8 @@ def test_promotions_scraping(chain_tuple):
         logging.error(f"Failed loading excel of {chain_name}")
         raise
 
-    assert (
-        df.shape[0] > MIN_NUM_OF_PROMOS and df.shape[1] == PROMOTION_COLS_NUM
+    assert df.shape[0] > MIN_NUM_OF_PROMOS and df.shape[1] == len(
+        PROMOTIONS_TABLE_HEADERS
     ), f"Failed scraping {chain_name}"
 
 

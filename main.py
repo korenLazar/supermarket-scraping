@@ -175,6 +175,7 @@ if __name__ == "__main__":
                 chain=chain,
                 load_promos=args.load_promos,
                 load_prices=args.load_prices,
+                include_non_full_files=False,
             )
         else:
             items_dict = get_all_prices_with_promos(
@@ -221,4 +222,5 @@ if __name__ == "__main__":
             promo_name=args.find_promos_by_name[1],
             load_prices=args.load_prices,
             load_promos=args.load_promos,
+            include_non_full_files=True,
         )

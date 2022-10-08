@@ -18,15 +18,6 @@ from utils import (
     log_message_and_time_if_debug,
 )
 
-XML_FILES_PROMOTIONS_CATEGORIES = [
-    SupermarketChain.XMLFilesCategory.PromosFull,
-    SupermarketChain.XMLFilesCategory.Promos,
-]
-
-PROMOTION_COLS_NUM = (
-    15  # The length of the list returned by get_promotion_row_for_table function
-)
-
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
 PROMOTIONS_TABLE_HEADERS = [
@@ -202,7 +193,11 @@ def get_promotion_row_for_table(promo: Promotion, item: Item) -> List:
 
 
 def get_available_promos(
-    chain: SupermarketChain, store_id: int, load_prices: bool, load_promos: bool
+    chain: SupermarketChain,
+    store_id: int,
+    load_prices: bool,
+    load_promos: bool,
+    include_non_full_files: bool,
 ) -> List[Promotion]:
     """
     This function return the available promotions given a BeautifulSoup object.
@@ -211,12 +206,17 @@ def get_available_promos(
     :param store_id: A given store ID
     :param load_prices: A boolean representing whether to load an existing prices file or download it
     :param load_promos: A boolean representing whether to load an existing promotion file or download it
+    :param include_non_full_files: Whether to include non full files (promos/prices)
     :return: Promotions that are not included in PRODUCTS_TO_IGNORE and are currently available
     """
     log_message_and_time_if_debug("Importing prices XML file")
-    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_prices)
+    items_dict: Dict[str, Item] = create_items_dict(
+        chain, store_id, load_prices, include_non_full_files
+    )
     log_message_and_time_if_debug("Importing promotions XML file")
-    promo_tags = get_all_promos_tags(chain, store_id, load_promos)
+    promo_tags = get_all_promos_tags(
+        chain, store_id, load_promos, include_non_full_files
+    )
 
     log_message_and_time_if_debug("Creating promotions objects")
     promo_objs = list()
@@ -380,6 +380,7 @@ def main_latest_promos(
     chain: SupermarketChain,
     load_promos: bool,
     load_prices: bool,
+    include_non_full_files: bool,
 ) -> None:
     """
     This function writes to a file the available promotions in a store with a given id sorted by their update date.
@@ -389,9 +390,10 @@ def main_latest_promos(
     :param load_prices: A boolean representing whether to load an existing prices xml file
     :param load_promos: A boolean representing whether to load an existing promos xml file
     :param output_filename: A path to write the promotions table
+    :param include_non_full_files: Whether to include also non full files (promos/prices)
     """
     promotions: List[Promotion] = get_available_promos(
-        chain, store_id, load_prices, load_promos
+        chain, store_id, load_prices, load_promos, include_non_full_files
     )
     promotions.sort(
         key=lambda promo: (
@@ -407,9 +409,9 @@ def get_all_prices_with_promos(
     store_id: int, chain: SupermarketChain, load_promos: bool, load_prices: bool
 ):
     log_message_and_time_if_debug("Importing prices XML file")
-    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_prices)
+    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_prices, False)
     log_message_and_time_if_debug("Importing promotions XML file")
-    promo_tags = get_all_promos_tags(chain, store_id, load_promos)
+    promo_tags = get_all_promos_tags(chain, store_id, load_promos, False)
 
     log_message_and_time_if_debug("Creating promotions objects")
     cur_promo = None
@@ -448,6 +450,7 @@ def log_promos_by_name(
     promo_name: str,
     load_prices: bool,
     load_promos: bool,
+    include_non_full_files: bool,
 ):
     """
     This function prints all promotions in a given chain and store_id containing a given promo_name.
@@ -457,9 +460,10 @@ def log_promos_by_name(
     :param promo_name: A given name of a promo (or part of it)
     :param load_prices: A boolean representing whether to load an saved prices XML file or scrape a new one
     :param load_promos: A boolean representing whether to load an saved XML file or scrape a new one
+    :param include_non_full_files: Whether to include non full files (promos/prices)
     """
     promotions: List[Promotion] = get_available_promos(
-        chain, store_id, load_prices, load_promos
+        chain, store_id, load_prices, load_promos, include_non_full_files
     )
     for promo in promotions:
         if promo_name in promo.content:
@@ -471,8 +475,12 @@ def get_all_null_items_in_promos(chain, store_id) -> List[str]:
     This function finds all items appearing in the chain's promotions file but not in the chain's prices file.
     Outdated.
     """
-    items_dict: Dict[str, Item] = create_items_dict(chain, store_id, load_xml=True)
-    promo_tags = get_all_promos_tags(chain, store_id, load_xml=True)
+    items_dict: Dict[str, Item] = create_items_dict(
+        chain, store_id, load_xml=True, include_non_full_price_file=True
+    )
+    promo_tags = get_all_promos_tags(
+        chain, store_id, load_xml=True, include_non_full_files=True
+    )
     return [
         item
         for promo_tag in promo_tags
@@ -481,7 +489,7 @@ def get_all_null_items_in_promos(chain, store_id) -> List[str]:
 
 
 def get_all_promos_tags(
-    chain: SupermarketChain, store_id: int, load_xml: bool
+    chain: SupermarketChain, store_id: int, load_xml: bool, include_non_full_files: bool
 ) -> List[Tag]:
     """
     This function gets all the promotions tags for a given store in a given chain.
@@ -490,10 +498,14 @@ def get_all_promos_tags(
     :param chain: A given supermarket chain
     :param store_id: A given store ID
     :param load_xml: A boolean representing whether to try loading the promotions from an existing XML file
+    :param include_non_full_files: Whether to include non full promo file
     :return: A list of promotions tags
     """
     bs_objects = list()
-    for category in tqdm(XML_FILES_PROMOTIONS_CATEGORIES, desc="promotions_files"):
+    promotion_xml_file_types = [SupermarketChain.XMLFilesCategory.PromosFull]
+    if include_non_full_files:
+        promotion_xml_file_types.append(SupermarketChain.XMLFilesCategory.Promos)
+    for category in tqdm(promotion_xml_file_types, desc="promotions_files"):
         xml_path = xml_file_gen(chain, store_id, category.name)
         bs_objects.append(
             create_bs_object(chain, store_id, category, load_xml, xml_path)
