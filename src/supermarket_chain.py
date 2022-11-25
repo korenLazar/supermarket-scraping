@@ -6,7 +6,7 @@ import requests
 from aenum import Enum
 from bs4.element import Tag
 
-from item import Item
+from src.item import Item
 
 
 class Meta(type):
@@ -87,7 +87,7 @@ class SupermarketChain(object, metaclass=Meta):
     ) -> str:
         """
         This method scrapes the supermarket's website and according to the given store id and category,
-        it returns a url containing the data or or a path to a gz file containing the data.
+        it returns a url containing the data or a path to a gz file containing the data.
 
         :param store_id: A given ID of a store
         :param category: A given category

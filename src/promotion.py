@@ -11,10 +11,10 @@ from aenum import Enum
 from bs4.element import Tag
 from tqdm import tqdm
 
-from item import Item
-from supermarket_chain import SupermarketChain
-from utils import create_bs_object, create_items_dict, get_float_from_tag, xml_file_gen
-from utils import (
+from src.item import Item
+from src.supermarket_chain import SupermarketChain
+from src.utils import create_bs_object, create_items_dict, get_float_from_tag, xml_file_gen
+from src.utils import (
     log_message_and_time_if_debug,
 )
 

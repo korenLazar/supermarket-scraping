@@ -1,4 +1,4 @@
-from chains.binaproject_web_client import BinaProjectWebClient
+from src.chains.binaproject_web_client import BinaProjectWebClient
 
 
 class ShukHayir(BinaProjectWebClient):

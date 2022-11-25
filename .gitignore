@@ -2,7 +2,7 @@
 grading_check.py
 venv/
 __pycache__/
-raw_files/
+raw_files/*
 results/
 all_deals.py
 unknown_items.csv

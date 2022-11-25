@@ -6,15 +6,17 @@ import zipfile
 from argparse import ArgumentTypeError
 from datetime import date
 from datetime import datetime
+from http.cookiejar import MozillaCookieJar
 from os import path
+from pathlib import Path
 from typing import AnyStr, Dict
 
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from item import Item
-from supermarket_chain import SupermarketChain
+from src.item import Item
+from src.supermarket_chain import SupermarketChain
 
 
 RESULTS_DIRNAME = "results"
@@ -82,9 +84,11 @@ def get_bs_object_from_link(
     :return: A BeautifulSoup object with xml content.
     """
     session = requests.Session()
+    session.cookies = MozillaCookieJar("cookies.txt")
     download_url_or_path: str = chain.get_download_url_or_path(
         store_id, category, session
     )
+
     if not download_url_or_path:
         return BeautifulSoup()
     if os.path.isfile(download_url_or_path):
@@ -92,6 +96,10 @@ def get_bs_object_from_link(
             xml_content = fIn.read()
         os.remove(download_url_or_path)  # Delete gz file
     else:
+        try:
+            session.cookies.load()
+        except FileNotFoundError:
+            logging.info("didn't find cookie file")
         response_content = session.get(download_url_or_path).content
         try:
             xml_content: AnyStr = gzip.decompress(response_content)

@@ -3,7 +3,7 @@ import re
 
 import requests
 
-from supermarket_chain import SupermarketChain
+from src.supermarket_chain import SupermarketChain
 
 FNAME_KEY = "FileNm"
 

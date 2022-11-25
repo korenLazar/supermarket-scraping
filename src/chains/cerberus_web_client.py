@@ -12,8 +12,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-from supermarket_chain import SupermarketChain
-from utils import RAW_FILES_DIRNAME
+import raw_files
+from src.supermarket_chain import SupermarketChain
 
 
 class CerberusWebClient(SupermarketChain):
@@ -22,7 +22,7 @@ class CerberusWebClient(SupermarketChain):
     def username(self):
         pass
 
-    download_dir = os.path.join(os.path.abspath(os.path.curdir), RAW_FILES_DIRNAME)
+    download_dir = raw_files.__path__[0]
 
     def is_linux_server(self) -> bool:
         return sys.platform == "linux" and not os.environ.get("DISPLAY")

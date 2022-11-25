@@ -5,8 +5,8 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from item import Item
-from supermarket_chain import SupermarketChain
+from src.item import Item
+from src.supermarket_chain import SupermarketChain
 
 
 class MahsaneiHashook(SupermarketChain):

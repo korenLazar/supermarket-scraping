@@ -7,19 +7,19 @@ import pandas as pd
 import pytest
 import requests
 
-from chains.bareket import Bareket
-from chains.co_op import CoOp
-from chains.dor_alon import DorAlon
-from chains.hazi_hinam import HaziHinam
-from chains.keshet import Keshet
-from chains.shuk_hayir import ShukHayir
-from chains.stop_market import StopMarket
-from chains.tiv_taam import TivTaam
-from chains.yeinot_bitan import YeinotBitan
-from chains.zol_vebegadol import ZolVebegadol
-from main import CHAINS_DICT
-from promotion import main_latest_promos, PROMOTIONS_TABLE_HEADERS
-from supermarket_chain import SupermarketChain
+from src.chains.bareket import Bareket
+from src.chains.co_op import CoOp
+from src.chains.dor_alon import DorAlon
+from src.chains.hazi_hinam import HaziHinam
+from src.chains.keshet import Keshet
+from src.chains.shuk_hayir import ShukHayir
+from src.chains.stop_market import StopMarket
+from src.chains.tiv_taam import TivTaam
+from src.chains.yeinot_bitan import YeinotBitan
+from src.chains.zol_vebegadol import ZolVebegadol
+from src.main import CHAINS_DICT
+from src.promotion import main_latest_promos, PROMOTIONS_TABLE_HEADERS
+from src.supermarket_chain import SupermarketChain
 
 pytest.main(args=["-s", os.path.abspath(__file__)])
 

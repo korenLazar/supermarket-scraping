@@ -5,7 +5,7 @@ import numpy as np
 import requests
 from bs4 import BeautifulSoup
 
-from supermarket_chain import SupermarketChain
+from src.supermarket_chain import SupermarketChain
 
 
 class YeinotBitan(SupermarketChain):

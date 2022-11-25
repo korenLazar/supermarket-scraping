@@ -1,4 +1,4 @@
-from chains.cerberus_web_client import CerberusWebClient
+from src.chains.cerberus_web_client import CerberusWebClient
 
 
 class Keshet(CerberusWebClient):
