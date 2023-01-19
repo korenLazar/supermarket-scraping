@@ -1,4 +1,4 @@
-from src.chains.mahsaneiHashook import MahsaneiHashook
+from src.chains.engines.matrix import MahsaneiHashook
 
 
 class Victory(MahsaneiHashook):

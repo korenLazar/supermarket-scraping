@@ -1,4 +1,4 @@
-from src.chains.cerberus_web_client import CerberusWebClient
+from src.chains.engines.cerberus_web_client import CerberusWebClient
 
 
 class HaziHinam(CerberusWebClient):
