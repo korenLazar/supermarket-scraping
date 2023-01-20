@@ -1,72 +1,21 @@
-import logging
-import os
-import platform
-import shutil
-import sys
-import time
 from abc import abstractmethod
-
-import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
-
-import raw_files
 from src.supermarket_chain import SupermarketChain
 
 
 class CerberusWebClient(SupermarketChain):
+
     @property
     @abstractmethod
-    def username(self):
+    def scraper(self):
         pass
 
-    download_dir = raw_files.__path__[0]
 
-    def is_linux_server(self) -> bool:
-        return sys.platform == "linux" and not os.environ.get("DISPLAY")
-
-    def set_browser_options(self) -> webdriver.ChromeOptions:
-        options = webdriver.ChromeOptions()
-        options.add_experimental_option(
-            "prefs", {"download.default_directory": self.download_dir}
-        )
-        options.add_argument("ignore-certificate-errors")
-        options.add_argument("--ignore-ssl-errors=yes")
-        options.headless = logging.DEBUG != logging.root.level
-        return options
-
-    def set_browser(self, options: webdriver.ChromeOptions) -> webdriver.Chrome:
-        if self.is_linux_server() and platform.machine() == "aarch64":
-            return webdriver.Chrome(
-                service=Service("/usr/bin/chromedriver"), options=options
-            )
-        return webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()), options=options
-        )
-
-    def get_download_url_or_path(
-        self,
+    def get_filter_function(
+        links: list,
         store_id: int,
         category: SupermarketChain.XMLFilesCategory,
-        session: requests.Session,
-    ) -> str:
-        options = self.set_browser_options()
-        driver = self.set_browser(options)
-        driver.get("https://url.retail.publishedprices.co.il/login#")
-        time.sleep(2)
-        userElem = driver.find_element(By.NAME, "username")
-        userElem.send_keys(self.username)
-        driver.find_element(By.NAME, "Submit").click()
-        time.sleep(2)
-        searchElem = driver.find_element(By.CLASS_NAME, "form-control")
-        searchElem.send_keys(category.name.lower().replace("s", ""))
-        time.sleep(5)
-        conns = driver.find_elements(By.CLASS_NAME, "f")
-        best_link = ""
-        for conn in conns:
-            link = conn.get_attribute("href").lower()
+    ):
+        for link in links:
             if category == SupermarketChain.XMLFilesCategory.Promos:
                 filter_func = (
                     lambda l: "promo" in l
@@ -99,21 +48,4 @@ class CerberusWebClient(SupermarketChain):
             if filter_func(link):
                 if not best_link or int(link[-7:-3]) > int(best_link[-7:-3]):
                     best_link = link
-
-        if not best_link:
-            return ""
-        driver.get(best_link)
-        time.sleep(3)
-        filename = best_link.split("/")[
-            -1
-        ]  # don't be an idiot. it is stupid to count letters
-        # split and grab, or rename it by yourself.
-        path_download = os.path.join(self.download_dir, filename)
-        path_to_save = os.path.join(self.download_dir, f"{self.username}-{filename}")
-        try:
-            shutil.move(path_download, path_to_save)
-            logging.info(f"Downloaded the file to: {path_to_save}")
-        except:
-            logging.info(f"{filename} already exists in {path_to_save}")
-
-        return path_to_save
+        return best_link

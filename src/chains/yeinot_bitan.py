@@ -11,6 +11,12 @@ from src.supermarket_chain import SupermarketChain
 class YeinotBitan(SupermarketChain):
     _date_hour_format = "%Y-%m-%d %H:%M:%S"
 
+
+    @property
+    def scraper(self):
+        from il_supermarket_scarper.scrappers_factory import ScraperFactory
+        return ScraperFactory.YAYNO_BITAN
+
     @staticmethod
     def get_download_url_or_path(
         store_id: int,

@@ -83,33 +83,9 @@ def get_bs_object_from_link(
     :param category: A given category
     :return: A BeautifulSoup object with xml content.
     """
-    session = requests.Session()
-    session.cookies = MozillaCookieJar("cookies.txt")
     download_url_or_path: str = chain.get_download_url_or_path(
-        store_id, category, session
-    )
+        store_id, category
 
-    if not download_url_or_path:
-        return BeautifulSoup()
-    if os.path.isfile(download_url_or_path):
-        with gzip.open(download_url_or_path) as fIn:
-            xml_content = fIn.read()
-        os.remove(download_url_or_path)  # Delete gz file
-    else:
-        try:
-            session.cookies.load()
-        except FileNotFoundError:
-            logging.info("didn't find cookie file")
-        response_content = session.get(download_url_or_path).content
-        try:
-            xml_content: AnyStr = gzip.decompress(response_content)
-        except gzip.BadGzipFile:
-            with zipfile.ZipFile(io.BytesIO(response_content)) as the_zip:
-                zip_info = the_zip.infolist()[0]
-                with the_zip.open(zip_info) as the_file:
-                    xml_content = the_file.read()
-    with open(xml_path, "wb") as f_out:
-        f_out.write(xml_content)
     return BeautifulSoup(xml_content, features="xml")
 
 

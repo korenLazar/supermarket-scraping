@@ -1,5 +1,10 @@
-from src.chains.engines.matrix import MahsaneiHashook
+from src.chains.engines.matrix import Matrix
 
 
-class Bareket(MahsaneiHashook):
-    pass
+class Bareket(Matrix):
+ 
+ 
+    @property
+    def scraper(self):
+        from il_supermarket_scarper.scrappers_factory import ScraperFactory
+        return ScraperFactory.BAREKET
