@@ -88,7 +88,7 @@ class SupermarketChain(object, metaclass=Meta):
         self,
         store_id: int, category: XMLFilesCategory
     ) -> str:
-        return self.scraper.scarpe(store_id,category)
+        return self.scraper.value().scarpe(store_id,category)
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:
