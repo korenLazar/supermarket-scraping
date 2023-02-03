@@ -17,6 +17,7 @@ from src.utils import create_bs_object, create_items_dict, get_float_from_tag, x
 from src.utils import (
     log_message_and_time_if_debug,
 )
+from il_supermarket_scarper.main import FileTypesFilters
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
@@ -502,9 +503,9 @@ def get_all_promos_tags(
     :return: A list of promotions tags
     """
     bs_objects = list()
-    promotion_xml_file_types = [SupermarketChain.XMLFilesCategory.PromosFull]
+    promotion_xml_file_types = [FileTypesFilters.PROMO_FULL_FILE]
     if include_non_full_files:
-        promotion_xml_file_types.append(SupermarketChain.XMLFilesCategory.Promos)
+        promotion_xml_file_types.append(FileTypesFilters.PROMO_FILE)
     for category in tqdm(promotion_xml_file_types, desc="promotions_files"):
         xml_path = xml_file_gen(chain, store_id, category.name)
         bs_objects.append(

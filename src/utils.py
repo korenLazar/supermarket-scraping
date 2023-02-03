@@ -10,6 +10,7 @@ from http.cookiejar import MozillaCookieJar
 from os import path
 from pathlib import Path
 from typing import AnyStr, Dict
+from il_supermarket_scarper.main import FileTypesFilters
 
 import requests
 from bs4 import BeautifulSoup
@@ -46,7 +47,7 @@ def xml_file_gen(chain: SupermarketChain, store_id: int, category_name: str) -> 
 def create_bs_object(
     chain: SupermarketChain,
     store_id: int,
-    category: SupermarketChain.XMLFilesCategory,
+    category: FileTypesFilters,
     load_xml: bool,
     xml_path: str,
 ) -> BeautifulSoup:
@@ -71,7 +72,7 @@ def create_bs_object(
 def get_bs_object_from_link(
     chain: SupermarketChain,
     store_id: int,
-    category: SupermarketChain.XMLFilesCategory,
+    category: FileTypesFilters,
     xml_path: str,
 ) -> BeautifulSoup:
     """
@@ -113,9 +114,9 @@ def create_items_dict(
     :param include_non_full_price_file: Whether to include "Price" file as well or only "PriceFull" file
     """
     items_dict = dict()
-    price_file_types = [SupermarketChain.XMLFilesCategory.PricesFull]
+    price_file_types = [FileTypesFilters.PRICE_FULL_FILE]
     if include_non_full_price_file:
-        price_file_types.append(SupermarketChain.XMLFilesCategory.Prices)
+        price_file_types.append(FileTypesFilters.PRICE_FILE)
     for category in tqdm(
         price_file_types,
         desc="prices_files",

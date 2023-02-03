@@ -2,7 +2,7 @@ from abc import abstractmethod
 from argparse import ArgumentTypeError
 from typing import Dict, List
 
-import requests
+from il_supermarket_scarper.main import FileTypesFilters
 from enum import Enum
 from bs4.element import Tag
 
@@ -19,15 +19,9 @@ class SupermarketChain(object, metaclass=Meta):
     A class representing a supermarket chain.
     """
     @property
-    def scraper():
+    @abstractmethod
+    def scraper(self):
         pass
-
-    class XMLFilesCategory(Enum):
-        """
-        An enum class of different XML files produced by a supermarket chain
-        """
-
-        All, Prices, PricesFull, Promos, PromosFull, Stores = range(6)
 
     _promotion_tag_name = "Promotion"
     _promotion_update_tag_name = "PromotionUpdateDate"
@@ -86,9 +80,9 @@ class SupermarketChain(object, metaclass=Meta):
     @abstractmethod
     def get_download_url_or_path(
         self,
-        store_id: int, category: XMLFilesCategory
+        store_id: int, category: FileTypesFilters
     ) -> str:
-        return self.scraper.value().scarpe(store_id,category)
+        return self.scraper.value().scrape(store_id=store_id,files_types=[category.name],only_latest=True)
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:

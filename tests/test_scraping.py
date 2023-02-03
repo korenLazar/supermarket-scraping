@@ -6,9 +6,8 @@ import tempfile
 import pandas as pd
 import pytest
 import requests
-
+from il_supermarket_scarper.main import FileTypesFilters
 from src.chains.bareket import Bareket
-from src.chains.co_op import CoOp
 from src.chains.dor_alon import DorAlon
 from src.chains.hazi_hinam import HaziHinam
 from src.chains.keshet import Keshet
@@ -39,23 +38,23 @@ def test_searching_for_download_urls(chain_tuple):
     store_id: int = valid_store_id_by_chain(chain_name)
 
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.PromosFull, r"promo[s]?full", session
+        chain, store_id, FileTypesFilters.PROMO_FULL_FILE, r"promo[s]?full", session
     )
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.Promos, r"promo[s]?", session
+        chain, store_id, FileTypesFilters.PROMO_FILE, r"promo[s]?", session
     )
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.PricesFull, r"price[s]?full", session
+        chain, store_id, FileTypesFilters.PRICE_FULL_FILE, r"price[s]?full", session
     )
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.Prices, r"price[s]?", session
+        chain, store_id, FileTypesFilters.PRICE_FILE, r"price[s]?", session
     )
 
 
 def _test_download_url_helper(
     chain: SupermarketChain,
     store_id: int,
-    category: SupermarketChain.XMLFilesCategory,
+    category: FileTypesFilters,
     regex_pat: str,
     session: requests.session,
 ):
@@ -66,7 +65,7 @@ def _test_download_url_helper(
     assert re.search(
         regex_pat, download_url, re.IGNORECASE
     ), f"Invalid {category.name} url in {repr(type(chain))}"
-    if category in [chain.XMLFilesCategory.Prices, chain.XMLFilesCategory.Promos]:
+    if category in [FileTypesFilters.PRICE_FILE, FileTypesFilters.PROMO_FILE]:
         assert not re.search(
             "full", download_url, re.IGNORECASE
         ), f"Downloaded the full {category.name} file mistakenly in {repr(type(chain))}"

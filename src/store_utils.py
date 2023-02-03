@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from src.utils import xml_file_gen, create_bs_object
 from src.supermarket_chain import SupermarketChain
-
+from il_supermarket_scarper.main import FileTypesFilters
 
 def log_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
     """
@@ -16,8 +16,8 @@ def log_stores_ids(city: str, load_xml: bool, chain: SupermarketChain):
     :param load_xml: A boolean representing whether to load an existing xml or load an already saved one
     :param city: A string representing the city of the requested store.
     """
-    xml_path: str = xml_file_gen(chain, -1, chain.XMLFilesCategory.Stores.name)
-    bs_stores: BeautifulSoup = create_bs_object(chain, -1, chain.XMLFilesCategory.Stores, load_xml, xml_path)
+    xml_path: str = xml_file_gen(chain, -1, FileTypesFilters.STORE_FILE.name)
+    bs_stores: BeautifulSoup = create_bs_object(chain, -1, FileTypesFilters.STORE_FILE, load_xml, xml_path)
 
     for store in bs_stores.find_all(lambda tag: tag.name.lower() == "store"):
         if store.find(re.compile(f"^city$", re.I), attrs={'text': city}) or store.find(re.compile(f"^storename$", re.I), attrs={'name': lambda x: x and city in x.lower()}):

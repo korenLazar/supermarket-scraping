@@ -1,8 +1,5 @@
 import re
 from typing import Dict, List
-
-import requests
-from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from src.item import Item
@@ -16,31 +13,6 @@ class Matrix(SupermarketChain):
     _date_hour_format = "%Y/%m/%d %H:%M:%S"
     _update_date_format = "%Y/%m/%d %H:%M:%S"
     _item_tag_name = "Product"
-
-    def get_filter_function(
-        links: list,
-        store_id: int,
-        category: SupermarketChain.XMLFilesCategory,
-    ):
-        if category in [
-            SupermarketChain.XMLFilesCategory.Promos,
-            SupermarketChain.XMLFilesCategory.Prices,
-        ]:
-            fname_filter_func = (
-                lambda fname: fname
-                and category.name.replace("s", "") in fname
-                and f"-{store_id:03d}-20" in fname
-                and not re.search("full", fname, re.IGNORECASE)
-            )
-        else:
-            fname_filter_func = (
-                lambda fname: fname
-                and category.name.replace("s", "") in fname
-                and f"-{store_id:03d}-20" in fname
-            )
-
-        return list(filter(fname_filter_func,links))
-
 
 
     @staticmethod

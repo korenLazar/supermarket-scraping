@@ -1,11 +1,7 @@
-from abc import abstractmethod
 from src.supermarket_chain import SupermarketChain
 
 
 class CerberusWebClient(SupermarketChain):
+    pass
 
     
-    @property
-    @abstractmethod
-    def scraper(self):
-        pass

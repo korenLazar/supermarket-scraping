@@ -8,7 +8,6 @@ from datetime import datetime, date
 from pathlib import Path
 
 from src.chains.bareket import Bareket
-from src.chains.co_op import CoOp
 from src.chains.dor_alon import DorAlon
 from src.chains.freshmarket import Freshmarket
 from src.chains.hazi_hinam import HaziHinam
@@ -51,7 +50,6 @@ CHAINS_LIST = [
     StopMarket,
     TivTaam,
     Shufersal,
-    CoOp,
     Victory,
     Yohananof,
     ZolVebegadol,
