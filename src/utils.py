@@ -84,8 +84,8 @@ def get_bs_object_from_link(
     :return: A BeautifulSoup object with xml content.
     """
     download_url_or_path: str = chain.get_download_url_or_path(
-        store_id, category
-
+        store_id, category)
+    xml_content = chain.scraper()
     return BeautifulSoup(xml_content, features="xml")
 
 
