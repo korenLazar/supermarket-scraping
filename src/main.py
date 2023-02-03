@@ -15,7 +15,7 @@ from src.chains.hazi_hinam import HaziHinam
 from src.chains.keshet import Keshet
 from src.chains.king_store import KingStore
 from src.chains.maayan2000 import Maayan2000
-from src.chains.engines.matrix import MahsaneiHashook
+from src.chains.engines.matrix import Matrix
 from src.chains.mega import Mega
 from src.chains.osher_ad import OsherAd
 from src.chains.rami_levi import RamiLevi
@@ -23,7 +23,7 @@ from src.chains.shefa_birkat_hashem import ShefaBirkatHashem
 from src.chains.shufersal import Shufersal
 from src.chains.shuk_hayir import ShukHayir
 from src.chains.stop_market import StopMarket
-from src.chains.engines.multipage import SuperPharm
+from src.chains.engines.multipage import Multipage
 from src.chains.tiv_taam import TivTaam
 from src.chains.victory import Victory
 from src.chains.yeinot_bitan import YeinotBitan
@@ -43,7 +43,7 @@ from src.utils import (
 
 CHAINS_LIST = [
     Bareket,
-    MahsaneiHashook,
+    Matrix,
     DorAlon,
     Freshmarket,
     HaziHinam,
@@ -62,7 +62,7 @@ CHAINS_LIST = [
     KingStore,
     ShefaBirkatHashem,
     YeinotBitan,
-    SuperPharm,
+    Matrix,
     Mega,
 ]
 

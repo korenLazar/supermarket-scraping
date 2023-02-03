@@ -3,7 +3,7 @@ from argparse import ArgumentTypeError
 from typing import Dict, List
 
 import requests
-from aenum import Enum
+from enum import Enum
 from bs4.element import Tag
 
 from src.item import Item

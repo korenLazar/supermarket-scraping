@@ -7,7 +7,7 @@ from typing import Dict, List, Union
 
 import pandas as pd
 import xlsxwriter
-from aenum import Enum
+from enum import Enum
 from bs4.element import Tag
 from tqdm import tqdm
 
@@ -40,7 +40,7 @@ PROMOTIONS_TABLE_HEADERS = [
 
 
 class ClubID(Enum):
-    _init_ = "value string"
+    #_init_ = "value string"
 
     REGULAR = 0, "מבצע רגיל"
     CLUB = 1, "מועדון"

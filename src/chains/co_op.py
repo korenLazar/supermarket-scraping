@@ -1,5 +1,5 @@
-from src.chains.engines.matrix import MahsaneiHashook
+from src.chains.engines.matrix import Matrix
 
 
-class CoOp(MahsaneiHashook):
+class CoOp(Matrix):
     pass
