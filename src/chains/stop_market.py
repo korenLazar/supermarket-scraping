@@ -5,5 +5,6 @@ class StopMarket(CerberusWebClient):
     _date_hour_format = "%Y-%m-%d %H:%M:%S"
 
     @property
-    def username(self):
-        return "Stop_Market"
+    def scraper(self):
+        from il_supermarket_scarper.scrappers_factory import ScraperFactory
+        return ScraperFactory.STOP_MARKET

@@ -9,6 +9,30 @@ from src.supermarket_chain import SupermarketChain
 
 class Multipage(SupermarketChain):
 
+    def get_filter_function(
+            links: list,
+            store_id: int,
+            category: SupermarketChain.XMLFilesCategory,
+        ):
+            if category in [
+                SupermarketChain.XMLFilesCategory.Promos,
+                SupermarketChain.XMLFilesCategory.Prices,
+            ]:
+                fname_filter_func = (
+                    lambda fname: fname
+                    and category.name.replace("s", "") in fname
+                    and f"-{store_id:03d}-20" in fname
+                    and not re.search("full", fname, re.IGNORECASE)
+                )
+            else:
+                fname_filter_func = (
+                    lambda fname: fname
+                    and category.name.replace("s", "") in fname
+                    and f"-{store_id:03d}-20" in fname
+                )
+
+            return list(filter(fname_filter_func,links))
+            
     @staticmethod
     def get_download_url_or_path(store_id: int, category: SupermarketChain.XMLFilesCategory, session: requests.Session) -> str:
         base_url = "http://prices.super-pharm.co.il/"

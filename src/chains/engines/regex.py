@@ -2,16 +2,12 @@ import re
 from datetime import datetime
 
 import numpy as np
-import requests
-from bs4 import BeautifulSoup
 
-from src.chains.engines.regex import Regex
 from src.supermarket_chain import SupermarketChain
 
-class Mega(Regex):
+
+class Regex(SupermarketChain):
     _date_hour_format = "%Y-%m-%d %H:%M:%S"
-
-
 
     def get_filter_function(
             links: list,

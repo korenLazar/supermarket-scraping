@@ -16,7 +16,7 @@ from src.chains.keshet import Keshet
 from src.chains.king_store import KingStore
 from src.chains.maayan2000 import Maayan2000
 from src.chains.engines.matrix import Matrix
-from src.chains.mega import Mega
+from src.chains.engines.regex import Mega
 from src.chains.osher_ad import OsherAd
 from src.chains.rami_levi import RamiLevi
 from src.chains.shefa_birkat_hashem import ShefaBirkatHashem

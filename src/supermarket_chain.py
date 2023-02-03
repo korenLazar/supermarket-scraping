@@ -18,6 +18,9 @@ class SupermarketChain(object, metaclass=Meta):
     """
     A class representing a supermarket chain.
     """
+    @property
+    def scraper():
+        pass
 
     class XMLFilesCategory(Enum):
         """
@@ -80,21 +83,12 @@ class SupermarketChain(object, metaclass=Meta):
             )
         return store_id
 
-    @staticmethod
     @abstractmethod
     def get_download_url_or_path(
-        store_id: int, category: XMLFilesCategory, session: requests.Session
+        self,
+        store_id: int, category: XMLFilesCategory
     ) -> str:
-        """
-        This method scrapes the supermarket's website and according to the given store id and category,
-        it returns a url containing the data or a path to a gz file containing the data.
-
-        :param store_id: A given ID of a store
-        :param category: A given category
-        :return: A downloadable link of the  data for a given store and category
-        :param session: A given session object
-        """
-        pass
+        return self.scraper.value().scarpe(store_id,category)
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:
