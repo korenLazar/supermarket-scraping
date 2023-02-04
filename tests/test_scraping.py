@@ -38,16 +38,16 @@ def test_searching_for_download_urls(chain_tuple):
     store_id: int = valid_store_id_by_chain(chain_name)
 
     _test_download_url_helper(
-        chain, store_id, FileTypesFilters.PROMO_FULL_FILE, r"promo[s]?full", session
+        chain, store_id, FileTypesFilters.PROMO_FULL_FILE, r"promo[s]?full"
     )
     _test_download_url_helper(
-        chain, store_id, FileTypesFilters.PROMO_FILE, r"promo[s]?", session
+        chain, store_id, FileTypesFilters.PROMO_FILE, r"promo[s]?"
     )
     _test_download_url_helper(
-        chain, store_id, FileTypesFilters.PRICE_FULL_FILE, r"price[s]?full", session
+        chain, store_id, FileTypesFilters.PRICE_FULL_FILE, r"price[s]?full"
     )
     _test_download_url_helper(
-        chain, store_id, FileTypesFilters.PRICE_FILE, r"price[s]?", session
+        chain, store_id, FileTypesFilters.PRICE_FILE, r"price[s]?"
     )
 
 
@@ -56,11 +56,11 @@ def _test_download_url_helper(
     store_id: int,
     category: FileTypesFilters,
     regex_pat: str,
-    session: requests.session,
 ):
-    download_url: str = chain.get_download_url_or_path(store_id, category, session)
-    if not download_url:  # Not found non-full Promos/Prices file
+    base_folder, download_urls = chain.get_download_url_or_path(store_id, category)
+    if not download_urls:  # Not found non-full Promos/Prices file
         return
+    download_url = os.path.join(base_folder,download_urls[0])
     logging.debug(download_url)
     assert re.search(
         regex_pat, download_url, re.IGNORECASE
