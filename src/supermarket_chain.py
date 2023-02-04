@@ -3,7 +3,7 @@ from argparse import ArgumentTypeError
 from typing import Dict, List
 
 from il_supermarket_scarper.main import FileTypesFilters
-from enum import Enum
+import os
 from bs4.element import Tag
 
 from src.item import Item
@@ -82,7 +82,9 @@ class SupermarketChain(object, metaclass=Meta):
         self,
         store_id: int, category: FileTypesFilters
     ) -> str:
-        return self.scraper.value().scrape(store_id=store_id,files_types=[category.name],only_latest=True)
+        dump_folder = ".dump"
+        self.scraper.value(folder_name=dump_folder).scrape(store_id=store_id,files_types=[category.name],only_latest=True)
+        return os.listdir(dump_folder)
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:

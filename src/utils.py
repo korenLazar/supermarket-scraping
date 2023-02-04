@@ -84,10 +84,11 @@ def get_bs_object_from_link(
     :param category: A given category
     :return: A BeautifulSoup object with xml content.
     """
-    download_url_or_path: str = chain.get_download_url_or_path(
+    download_url_or_path = chain.get_download_url_or_path(
         store_id, category)
-    xml_content = chain.scraper()
-    return BeautifulSoup(xml_content, features="xml")
+    assert len(download_url_or_path) == 1
+    with open(download_url_or_path[0], 'r') as f:
+        return BeautifulSoup(f.read(), features="xml")
 
 
 def get_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
