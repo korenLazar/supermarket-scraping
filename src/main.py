@@ -42,7 +42,6 @@ from src.utils import (
 
 CHAINS_LIST = [
     Bareket,
-    Matrix,
     DorAlon,
     Freshmarket,
     HaziHinam,
@@ -60,7 +59,6 @@ CHAINS_LIST = [
     KingStore,
     ShefaBirkatHashem,
     YeinotBitan,
-    Matrix,
 ]
 
 MONITORED_STORES = {

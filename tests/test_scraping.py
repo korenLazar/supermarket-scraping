@@ -111,10 +111,10 @@ def valid_store_id_by_chain(chain_name) -> int:
     """
     if chain_name == repr(DorAlon):
         store_id = 501
-    elif chain_name in [repr(TivTaam), repr(Bareket), repr(HaziHinam)]:
+    elif chain_name == repr(Bareket):
+        return 6
+    elif chain_name in [repr(TivTaam), repr(HaziHinam)]:
         store_id = 2
-    elif chain_name == repr(CoOp):
-        store_id = 202
     elif chain_name in [repr(ShukHayir), repr(ZolVebegadol)]:
         store_id = 4
     elif chain_name in [repr(StopMarket), repr(Keshet)]:

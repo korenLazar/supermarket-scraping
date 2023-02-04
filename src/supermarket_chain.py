@@ -83,8 +83,10 @@ class SupermarketChain(object, metaclass=Meta):
         store_id: int, category: FileTypesFilters
     ) -> str:
         dump_folder = ".dump"
-        self.scraper.value(folder_name=dump_folder).scrape(store_id=store_id,files_types=[category.name],only_latest=True)
-        return os.listdir(dump_folder)
+        scraper = self.scraper.value(folder_name=dump_folder)
+        scraper.scrape(store_id=store_id,files_types=[category.name],only_latest=True)
+        
+        return scraper.get_storage_path(), os.listdir(scraper.get_storage_path())
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:

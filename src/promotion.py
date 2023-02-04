@@ -180,7 +180,7 @@ def get_promotion_row_for_table(promo: Promotion, item: Item) -> List:
         item.price,
         promo.promo_func(item),
         (item.price - promo.promo_func(item)) / max(item.price, 1),
-        promo.club_id.string,
+        promo.club_id.name,
         promo.max_qty,
         promo.allow_multiple_discounts,
         promo.start_date <= datetime.now(),
