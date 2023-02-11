@@ -52,6 +52,7 @@ class CerberusWebClient(SupermarketChain):
         category: SupermarketChain.XMLFilesCategory,
         session: requests.Session,
     ) -> str:
+        os.chdir(self.download_dir)
         options = self.set_browser_options()
         driver = self.set_browser(options)
         driver.get("https://url.retail.publishedprices.co.il/login#")
@@ -115,5 +116,5 @@ class CerberusWebClient(SupermarketChain):
             logging.info(f"Downloaded the file to: {path_to_save}")
         except:
             logging.info(f"{filename} already exists in {path_to_save}")
-
+        os.chdir("../")
         return path_to_save
