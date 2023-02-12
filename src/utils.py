@@ -1,4 +1,4 @@
-import gzip
+import uuid
 import shutil
 import logging
 import os.path
@@ -84,16 +84,20 @@ def get_bs_object_from_link(
     :param category: A given category
     :return: A BeautifulSoup object with xml content.
     """
-    import uuid
-    dump_folder = ".dump_"+str(uuid.uuid4())
-    base_folder, download_url_or_path = chain.get_download_url_or_path(
-        store_id, category, dump_folder)
-    assert len(download_url_or_path) == 1
-    with open(os.path.join(base_folder,download_url_or_path[0]), 'r') as f:
-        bs_object =  BeautifulSoup(f.read(), features="xml")
-    shutil.rmtree(base_folder)
-    os.rmdir(dump_folder)
-    return bs_object
+    if not os.path.exists(xml_path):
+        dump_folder = ".dump_"+str(uuid.uuid4())
+        base_folder, download_url_or_path = chain.get_download_url_or_path(
+            store_id, category, dump_folder)
+        assert len(download_url_or_path) <= 1
+        if len(download_url_or_path) == 1:
+            downloaded_file = os.path.join(base_folder,download_url_or_path[0])
+            shutil.copyfile(downloaded_file,xml_path)
+        shutil.rmtree(dump_folder)
+
+    if not os.path.exists(xml_path):
+        return BeautifulSoup()
+
+    return get_bs_object_from_xml(xml_path)
 
 
 def get_bs_object_from_xml(xml_path: str) -> BeautifulSoup:

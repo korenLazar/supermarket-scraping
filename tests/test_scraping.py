@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shutil
 import tempfile
 
 import pandas as pd
@@ -69,7 +70,7 @@ def _test_download_url_helper(
         assert not re.search(
             "full", download_url, re.IGNORECASE
         ), f"Downloaded the full {category.name} file mistakenly in {repr(type(chain))}"
-
+    shutil.rmtree(dump_folder)
 
 @pytest.mark.parametrize("chain_name", CHAINS_DICT.keys())
 def test_promotions_scraping(chain_name):
