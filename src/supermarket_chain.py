@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from argparse import ArgumentTypeError
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from il_supermarket_scarper.main import FileTypesFilters
 import os
@@ -78,13 +78,13 @@ class SupermarketChain(object, metaclass=Meta):
             )
         return store_id
 
-    @abstractmethod
     def get_download_url_or_path(
         self,
         store_id: int,
         category: FileTypesFilters,
-        dump_folder,
-    ) -> str:
+        dump_folder: str,
+    ) -> Tuple[str,str]:
+
         scraper = self.scraper.value(folder_name=dump_folder)
         scraper.scrape(store_id=store_id, files_types=[category.name], only_latest=True)
 
