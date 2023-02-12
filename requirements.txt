@@ -12,4 +12,4 @@ pytest~=6.2.2
 pandas~=1.2.0
 argparse~=1.4.0
 XlsxWriter~=1.4.3
-git+https://github.com/erlichsefi/israeli-supermarket-scarpers.git@master
+il_supermarket_scarper==0.2.8
