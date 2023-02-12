@@ -22,17 +22,15 @@ from src.supermarket_chain import SupermarketChain
 
 pytest.main(args=["-s", os.path.abspath(__file__)])
 
-session = requests.Session()
-
 MIN_NUM_OF_PROMOS = 3
 
 
-@pytest.mark.parametrize("chain_tuple", CHAINS_DICT.items())
-def test_searching_for_download_urls(chain_tuple):
+@pytest.mark.parametrize("chain_name", CHAINS_DICT.keys())
+def test_searching_for_download_urls(chain_name):
     """
     Test that get_download_url of each chain returns the correct download url for each category in every chain.
     """
-    chain_name, chain = chain_tuple
+    chain = CHAINS_DICT[chain_name]
 
     logging.info(f"Checking download urls in chain {chain_name}")
     store_id: int = valid_store_id_by_chain(chain_name)
@@ -71,12 +69,12 @@ def _test_download_url_helper(
         ), f"Downloaded the full {category.name} file mistakenly in {repr(type(chain))}"
 
 
-@pytest.mark.parametrize("chain_tuple", CHAINS_DICT.items())
-def test_promotions_scraping(chain_tuple):
+@pytest.mark.parametrize("chain_name", CHAINS_DICT.keys())
+def test_promotions_scraping(chain_name):
     """
     Test scraping of promotions is completed successfully and a valid xlsx file is generated as an output.
     """
-    chain_name, chain = chain_tuple
+    chain = CHAINS_DICT[chain_name]
     tf = tempfile.NamedTemporaryFile(suffix=".xlsx")
 
     logging.info(f"Test scraping promotions from {chain_name}")
