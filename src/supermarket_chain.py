@@ -83,8 +83,7 @@ class SupermarketChain(object, metaclass=Meta):
         store_id: int,
         category: FileTypesFilters,
         dump_folder: str,
-    ) -> Tuple[str,str]:
-
+    ) -> Tuple[str, str]:
         scraper = self.scraper.value(folder_name=dump_folder)
         scraper.scrape(store_id=store_id, files_types=[category.name], only_latest=True)
 
