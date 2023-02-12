@@ -121,7 +121,7 @@ def valid_store_id_by_chain(chain_name) -> int:
     elif chain_name in [repr(StopMarket), repr(Keshet)]:
         store_id = 5
     elif chain_name == repr(YeinotBitan):
-        store_id = 3700
+        store_id = 3740
     else:
         store_id = 1
     return store_id
