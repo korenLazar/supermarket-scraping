@@ -28,7 +28,11 @@ from src.chains.victory import Victory
 from src.chains.yeinot_bitan import YeinotBitan
 from src.chains.yohananof import Yohananof
 from src.chains.zol_vebegadol import ZolVebegadol
-from src.promotion import main_latest_promos, log_promos_by_name, get_all_prices_with_promos
+from src.promotion import (
+    main_latest_promos,
+    log_promos_by_name,
+    get_all_prices_with_promos,
+)
 from src.store_utils import log_stores_ids
 from src.supermarket_chain import SupermarketChain
 from src.utils import (
@@ -67,8 +71,8 @@ MONITORED_STORES = {
     repr(OsherAd): [3, 1],
     repr(YeinotBitan): [67, 4],
     repr(Yohananof): [20, 1],
-    repr(Victory): ['089', 1],
-    repr(HaziHinam): [1, 6]
+    repr(Victory): ["089", 1],
+    repr(HaziHinam): [1, 6],
 }
 
 Path(RESULTS_DIRNAME).mkdir(exist_ok=True)

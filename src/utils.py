@@ -2,14 +2,11 @@ import uuid
 import shutil
 import logging
 import os.path
-import zipfile
 from argparse import ArgumentTypeError
 from datetime import date
 from datetime import datetime
-from http.cookiejar import MozillaCookieJar
 from os import path
-from pathlib import Path
-from typing import AnyStr, Dict
+from typing import Dict
 from il_supermarket_scarper.main import FileTypesFilters
 
 import requests
@@ -85,13 +82,14 @@ def get_bs_object_from_link(
     :return: A BeautifulSoup object with xml content.
     """
     if not os.path.exists(xml_path):
-        dump_folder = ".dump_"+str(uuid.uuid4())
+        dump_folder = ".dump_" + str(uuid.uuid4())
         base_folder, download_url_or_path = chain.get_download_url_or_path(
-            store_id, category, dump_folder)
+            store_id, category, dump_folder
+        )
         assert len(download_url_or_path) <= 1
         if len(download_url_or_path) == 1:
-            downloaded_file = os.path.join(base_folder,download_url_or_path[0])
-            shutil.copyfile(downloaded_file,xml_path)
+            downloaded_file = os.path.join(base_folder, download_url_or_path[0])
+            shutil.copyfile(downloaded_file, xml_path)
         shutil.rmtree(dump_folder)
 
     if not os.path.exists(xml_path):

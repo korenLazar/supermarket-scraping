@@ -18,6 +18,7 @@ class SupermarketChain(object, metaclass=Meta):
     """
     A class representing a supermarket chain.
     """
+
     @property
     @abstractmethod
     def scraper(self):
@@ -80,12 +81,13 @@ class SupermarketChain(object, metaclass=Meta):
     @abstractmethod
     def get_download_url_or_path(
         self,
-        store_id: int, category: FileTypesFilters,
+        store_id: int,
+        category: FileTypesFilters,
         dump_folder,
     ) -> str:
         scraper = self.scraper.value(folder_name=dump_folder)
-        scraper.scrape(store_id=store_id,files_types=[category.name],only_latest=True)
-        
+        scraper.scrape(store_id=store_id, files_types=[category.name], only_latest=True)
+
         return scraper.get_storage_path(), os.listdir(scraper.get_storage_path())
 
     @staticmethod

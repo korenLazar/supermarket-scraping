@@ -13,7 +13,12 @@ from tqdm import tqdm
 
 from src.item import Item
 from src.supermarket_chain import SupermarketChain
-from src.utils import create_bs_object, create_items_dict, get_float_from_tag, xml_file_gen
+from src.utils import (
+    create_bs_object,
+    create_items_dict,
+    get_float_from_tag,
+    xml_file_gen,
+)
 from src.utils import (
     log_message_and_time_if_debug,
 )
@@ -41,7 +46,7 @@ PROMOTIONS_TABLE_HEADERS = [
 
 
 class ClubID(Enum):
-    #_init_ = "value string"
+    # _init_ = "value string"
 
     REGULAR = 0, "מבצע רגיל"
     CLUB = 1, "מועדון"

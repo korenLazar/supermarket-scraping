@@ -1,4 +1,3 @@
-import re
 from typing import Dict, List
 from bs4.element import Tag
 
@@ -13,7 +12,6 @@ class Matrix(SupermarketChain):
     _date_hour_format = "%Y/%m/%d %H:%M:%S"
     _update_date_format = "%Y/%m/%d %H:%M:%S"
     _item_tag_name = "Product"
-
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:

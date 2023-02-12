@@ -57,11 +57,14 @@ def _test_download_url_helper(
     regex_pat: str,
 ):
     import uuid
-    dump_folder = ".dump_"+str(uuid.uuid4())
-    base_folder, download_urls = chain.get_download_url_or_path(store_id, category, dump_folder)
+
+    dump_folder = ".dump_" + str(uuid.uuid4())
+    base_folder, download_urls = chain.get_download_url_or_path(
+        store_id, category, dump_folder
+    )
     if not download_urls:  # Not found non-full Promos/Prices file
         return
-    download_url = os.path.join(base_folder,download_urls[0])
+    download_url = os.path.join(base_folder, download_urls[0])
     logging.debug(download_url)
     assert re.search(
         regex_pat, download_url, re.IGNORECASE
@@ -71,6 +74,7 @@ def _test_download_url_helper(
             "full", download_url, re.IGNORECASE
         ), f"Downloaded the full {category.name} file mistakenly in {repr(type(chain))}"
     shutil.rmtree(dump_folder)
+
 
 @pytest.mark.parametrize("chain_name", CHAINS_DICT.keys())
 def test_promotions_scraping(chain_name):
