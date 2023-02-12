@@ -55,7 +55,9 @@ def _test_download_url_helper(
     category: FileTypesFilters,
     regex_pat: str,
 ):
-    base_folder, download_urls = chain.get_download_url_or_path(store_id, category)
+    import uuid
+    dump_folder = ".dump_"+str(uuid.uuid4())
+    base_folder, download_urls = chain.get_download_url_or_path(store_id, category, dump_folder)
     if not download_urls:  # Not found non-full Promos/Prices file
         return
     download_url = os.path.join(base_folder,download_urls[0])

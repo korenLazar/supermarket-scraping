@@ -84,12 +84,15 @@ def get_bs_object_from_link(
     :param category: A given category
     :return: A BeautifulSoup object with xml content.
     """
+    import uuid
+    dump_folder = ".dump_"+str(uuid.uuid4())
     base_folder, download_url_or_path = chain.get_download_url_or_path(
-        store_id, category)
+        store_id, category, dump_folder)
     assert len(download_url_or_path) == 1
     with open(os.path.join(base_folder,download_url_or_path[0]), 'r') as f:
         bs_object =  BeautifulSoup(f.read(), features="xml")
     shutil.rmtree(base_folder)
+    os.rmdir(dump_folder)
     return bs_object
 
 

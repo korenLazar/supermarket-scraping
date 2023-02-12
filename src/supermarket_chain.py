@@ -80,10 +80,9 @@ class SupermarketChain(object, metaclass=Meta):
     @abstractmethod
     def get_download_url_or_path(
         self,
-        store_id: int, category: FileTypesFilters
+        store_id: int, category: FileTypesFilters,
+        dump_folder,
     ) -> str:
-        import uuid
-        dump_folder = ".dump_"+str(uuid.uuid4())
         scraper = self.scraper.value(folder_name=dump_folder)
         scraper.scrape(store_id=store_id,files_types=[category.name],only_latest=True)
         
