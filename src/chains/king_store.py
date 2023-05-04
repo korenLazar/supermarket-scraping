@@ -1,6 +1,8 @@
-from src.chains.binaproject_web_client import BinaProjectWebClient
+from src.chains.engines.binaproject_web_client import BinaProjectWebClient
+from il_supermarket_scarper.scrappers_factory import ScraperFactory
 
 
 class KingStore(BinaProjectWebClient):
-    _path_prefix = "Food_Law"
-    _hostname_suffix = ".co.il"
+    @property
+    def scraper(self):
+        return ScraperFactory.KING_STORE

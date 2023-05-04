@@ -1,9 +1,9 @@
 from abc import abstractmethod
 from argparse import ArgumentTypeError
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
-import requests
-from aenum import Enum
+from il_supermarket_scarper.main import FileTypesFilters
+import os
 from bs4.element import Tag
 
 from src.item import Item
@@ -19,12 +19,10 @@ class SupermarketChain(object, metaclass=Meta):
     A class representing a supermarket chain.
     """
 
-    class XMLFilesCategory(Enum):
-        """
-        An enum class of different XML files produced by a supermarket chain
-        """
-
-        All, Prices, PricesFull, Promos, PromosFull, Stores = range(6)
+    @property
+    @abstractmethod
+    def scraper(self):
+        pass
 
     _promotion_tag_name = "Promotion"
     _promotion_update_tag_name = "PromotionUpdateDate"
@@ -80,21 +78,16 @@ class SupermarketChain(object, metaclass=Meta):
             )
         return store_id
 
-    @staticmethod
-    @abstractmethod
     def get_download_url_or_path(
-        store_id: int, category: XMLFilesCategory, session: requests.Session
-    ) -> str:
-        """
-        This method scrapes the supermarket's website and according to the given store id and category,
-        it returns a url containing the data or a path to a gz file containing the data.
+        self,
+        store_id: int,
+        category: FileTypesFilters,
+        dump_folder: str,
+    ) -> Tuple[str, str]:
+        scraper = self.scraper.value(folder_name=dump_folder)
+        scraper.scrape(store_id=store_id, files_types=[category.name], only_latest=True)
 
-        :param store_id: A given ID of a store
-        :param category: A given category
-        :return: A downloadable link of the  data for a given store and category
-        :param session: A given session object
-        """
-        pass
+        return scraper.get_storage_path(), os.listdir(scraper.get_storage_path())
 
     @staticmethod
     def get_items(promo: Tag, items_dict: Dict[str, Item]) -> List[Item]:

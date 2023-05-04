@@ -1,15 +1,13 @@
-import gzip
-import io
+import uuid
+import shutil
 import logging
 import os.path
-import zipfile
 from argparse import ArgumentTypeError
 from datetime import date
 from datetime import datetime
-from http.cookiejar import MozillaCookieJar
 from os import path
-from pathlib import Path
-from typing import AnyStr, Dict
+from typing import Dict
+from il_supermarket_scarper.main import FileTypesFilters
 
 import requests
 from bs4 import BeautifulSoup
@@ -46,7 +44,7 @@ def xml_file_gen(chain: SupermarketChain, store_id: int, category_name: str) -> 
 def create_bs_object(
     chain: SupermarketChain,
     store_id: int,
-    category: SupermarketChain.XMLFilesCategory,
+    category: FileTypesFilters,
     load_xml: bool,
     xml_path: str,
 ) -> BeautifulSoup:
@@ -71,7 +69,7 @@ def create_bs_object(
 def get_bs_object_from_link(
     chain: SupermarketChain,
     store_id: int,
-    category: SupermarketChain.XMLFilesCategory,
+    category: FileTypesFilters,
     xml_path: str,
 ) -> BeautifulSoup:
     """
@@ -83,34 +81,21 @@ def get_bs_object_from_link(
     :param category: A given category
     :return: A BeautifulSoup object with xml content.
     """
-    session = requests.Session()
-    session.cookies = MozillaCookieJar("cookies.txt")
-    download_url_or_path: str = chain.get_download_url_or_path(
-        store_id, category, session
-    )
+    if not os.path.exists(xml_path):
+        dump_folder = ".dump_" + str(uuid.uuid4())
+        base_folder, download_url_or_path = chain.get_download_url_or_path(
+            store_id, category, dump_folder
+        )
+        assert len(download_url_or_path) <= 1
+        if len(download_url_or_path) == 1:
+            downloaded_file = os.path.join(base_folder, download_url_or_path[0])
+            shutil.copyfile(downloaded_file, xml_path)
+        shutil.rmtree(dump_folder)
 
-    if not download_url_or_path:
+    if not os.path.exists(xml_path):
         return BeautifulSoup()
-    if os.path.isfile(download_url_or_path):
-        with gzip.open(download_url_or_path) as fIn:
-            xml_content = fIn.read()
-        os.remove(download_url_or_path)  # Delete gz file
-    else:
-        try:
-            session.cookies.load()
-        except FileNotFoundError:
-            logging.info("didn't find cookie file")
-        response_content = session.get(download_url_or_path).content
-        try:
-            xml_content: AnyStr = gzip.decompress(response_content)
-        except gzip.BadGzipFile:
-            with zipfile.ZipFile(io.BytesIO(response_content)) as the_zip:
-                zip_info = the_zip.infolist()[0]
-                with the_zip.open(zip_info) as the_file:
-                    xml_content = the_file.read()
-    with open(xml_path, "wb") as f_out:
-        f_out.write(xml_content)
-    return BeautifulSoup(xml_content, features="xml")
+
+    return get_bs_object_from_xml(xml_path)
 
 
 def get_bs_object_from_xml(xml_path: str) -> BeautifulSoup:
@@ -137,9 +122,9 @@ def create_items_dict(
     :param include_non_full_price_file: Whether to include "Price" file as well or only "PriceFull" file
     """
     items_dict = dict()
-    price_file_types = [SupermarketChain.XMLFilesCategory.PricesFull]
+    price_file_types = [FileTypesFilters.PRICE_FULL_FILE]
     if include_non_full_price_file:
-        price_file_types.append(SupermarketChain.XMLFilesCategory.Prices)
+        price_file_types.append(FileTypesFilters.PRICE_FILE)
     for category in tqdm(
         price_file_types,
         desc="prices_files",

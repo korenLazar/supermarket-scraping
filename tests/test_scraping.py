@@ -1,14 +1,14 @@
 import logging
 import os
 import re
+import shutil
 import tempfile
 
 import pandas as pd
 import pytest
 import requests
-
+from il_supermarket_scarper.main import FileTypesFilters
 from src.chains.bareket import Bareket
-from src.chains.co_op import CoOp
 from src.chains.dor_alon import DorAlon
 from src.chains.hazi_hinam import HaziHinam
 from src.chains.keshet import Keshet
@@ -23,61 +23,65 @@ from src.supermarket_chain import SupermarketChain
 
 pytest.main(args=["-s", os.path.abspath(__file__)])
 
-session = requests.Session()
-
 MIN_NUM_OF_PROMOS = 3
 
 
-@pytest.mark.parametrize("chain_tuple", CHAINS_DICT.items())
-def test_searching_for_download_urls(chain_tuple):
+@pytest.mark.parametrize("chain_name", CHAINS_DICT.keys())
+def test_searching_for_download_urls(chain_name):
     """
     Test that get_download_url of each chain returns the correct download url for each category in every chain.
     """
-    chain_name, chain = chain_tuple
+    chain = CHAINS_DICT[chain_name]
 
     logging.info(f"Checking download urls in chain {chain_name}")
     store_id: int = valid_store_id_by_chain(chain_name)
 
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.PromosFull, r"promo[s]?full", session
+        chain, store_id, FileTypesFilters.PROMO_FULL_FILE, r"promo[s]?full"
     )
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.Promos, r"promo[s]?", session
+        chain, store_id, FileTypesFilters.PROMO_FILE, r"promo[s]?"
     )
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.PricesFull, r"price[s]?full", session
+        chain, store_id, FileTypesFilters.PRICE_FULL_FILE, r"price[s]?full"
     )
     _test_download_url_helper(
-        chain, store_id, chain.XMLFilesCategory.Prices, r"price[s]?", session
+        chain, store_id, FileTypesFilters.PRICE_FILE, r"price[s]?"
     )
 
 
 def _test_download_url_helper(
     chain: SupermarketChain,
     store_id: int,
-    category: SupermarketChain.XMLFilesCategory,
+    category: FileTypesFilters,
     regex_pat: str,
-    session: requests.session,
 ):
-    download_url: str = chain.get_download_url_or_path(store_id, category, session)
-    if not download_url:  # Not found non-full Promos/Prices file
+    import uuid
+
+    dump_folder = ".dump_" + str(uuid.uuid4())
+    base_folder, download_urls = chain.get_download_url_or_path(
+        store_id, category, dump_folder
+    )
+    if not download_urls:  # Not found non-full Promos/Prices file
         return
+    download_url = os.path.join(base_folder, download_urls[0])
     logging.debug(download_url)
     assert re.search(
         regex_pat, download_url, re.IGNORECASE
     ), f"Invalid {category.name} url in {repr(type(chain))}"
-    if category in [chain.XMLFilesCategory.Prices, chain.XMLFilesCategory.Promos]:
+    if category in [FileTypesFilters.PRICE_FILE, FileTypesFilters.PROMO_FILE]:
         assert not re.search(
             "full", download_url, re.IGNORECASE
         ), f"Downloaded the full {category.name} file mistakenly in {repr(type(chain))}"
+    shutil.rmtree(dump_folder)
 
 
-@pytest.mark.parametrize("chain_tuple", CHAINS_DICT.items())
-def test_promotions_scraping(chain_tuple):
+@pytest.mark.parametrize("chain_name", CHAINS_DICT.keys())
+def test_promotions_scraping(chain_name):
     """
     Test scraping of promotions is completed successfully and a valid xlsx file is generated as an output.
     """
-    chain_name, chain = chain_tuple
+    chain = CHAINS_DICT[chain_name]
     tf = tempfile.NamedTemporaryFile(suffix=".xlsx")
 
     logging.info(f"Test scraping promotions from {chain_name}")
@@ -112,16 +116,16 @@ def valid_store_id_by_chain(chain_name) -> int:
     """
     if chain_name == repr(DorAlon):
         store_id = 501
-    elif chain_name in [repr(TivTaam), repr(Bareket), repr(HaziHinam)]:
+    elif chain_name == repr(Bareket):
+        return 6
+    elif chain_name in [repr(TivTaam), repr(HaziHinam)]:
         store_id = 2
-    elif chain_name == repr(CoOp):
-        store_id = 202
     elif chain_name in [repr(ShukHayir), repr(ZolVebegadol)]:
         store_id = 4
     elif chain_name in [repr(StopMarket), repr(Keshet)]:
         store_id = 5
     elif chain_name == repr(YeinotBitan):
-        store_id = 3700
+        store_id = 3740
     else:
         store_id = 1
     return store_id

@@ -7,16 +7,22 @@ from typing import Dict, List, Union
 
 import pandas as pd
 import xlsxwriter
-from aenum import Enum
+from enum import Enum
 from bs4.element import Tag
 from tqdm import tqdm
 
 from src.item import Item
 from src.supermarket_chain import SupermarketChain
-from src.utils import create_bs_object, create_items_dict, get_float_from_tag, xml_file_gen
+from src.utils import (
+    create_bs_object,
+    create_items_dict,
+    get_float_from_tag,
+    xml_file_gen,
+)
 from src.utils import (
     log_message_and_time_if_debug,
 )
+from il_supermarket_scarper.main import FileTypesFilters
 
 INVALID_OR_UNKNOWN_PROMOTION_FUNCTION = -1
 
@@ -40,7 +46,7 @@ PROMOTIONS_TABLE_HEADERS = [
 
 
 class ClubID(Enum):
-    _init_ = "value string"
+    # _init_ = "value string"
 
     REGULAR = 0, "מבצע רגיל"
     CLUB = 1, "מועדון"
@@ -179,7 +185,7 @@ def get_promotion_row_for_table(promo: Promotion, item: Item) -> List:
         item.price,
         promo.promo_func(item),
         (item.price - promo.promo_func(item)) / max(item.price, 1),
-        promo.club_id.string,
+        promo.club_id.name,
         promo.max_qty,
         promo.allow_multiple_discounts,
         promo.start_date <= datetime.now(),
@@ -502,9 +508,9 @@ def get_all_promos_tags(
     :return: A list of promotions tags
     """
     bs_objects = list()
-    promotion_xml_file_types = [SupermarketChain.XMLFilesCategory.PromosFull]
+    promotion_xml_file_types = [FileTypesFilters.PROMO_FULL_FILE]
     if include_non_full_files:
-        promotion_xml_file_types.append(SupermarketChain.XMLFilesCategory.Promos)
+        promotion_xml_file_types.append(FileTypesFilters.PROMO_FILE)
     for category in tqdm(promotion_xml_file_types, desc="promotions_files"):
         xml_path = xml_file_gen(chain, store_id, category.name)
         bs_objects.append(

@@ -1,7 +1,8 @@
-from src.chains.binaproject_web_client import BinaProjectWebClient
+from src.chains.engines.binaproject_web_client import BinaProjectWebClient
+from il_supermarket_scarper.scrappers_factory import ScraperFactory
 
 
 class ShukHayir(BinaProjectWebClient):
     @property
-    def hostname_prefix(self):
-        return "shuk-hayir"
+    def scraper(self):
+        return ScraperFactory.SHUK_AHIR

@@ -8,28 +8,31 @@ from datetime import datetime, date
 from pathlib import Path
 
 from src.chains.bareket import Bareket
-from src.chains.co_op import CoOp
 from src.chains.dor_alon import DorAlon
 from src.chains.freshmarket import Freshmarket
 from src.chains.hazi_hinam import HaziHinam
 from src.chains.keshet import Keshet
 from src.chains.king_store import KingStore
 from src.chains.maayan2000 import Maayan2000
-from src.chains.mahsaneiHashook import MahsaneiHashook
-from src.chains.mega import Mega
+from src.chains.engines.matrix import Matrix
+from src.chains.engines.regex import Regex
 from src.chains.osher_ad import OsherAd
 from src.chains.rami_levi import RamiLevi
 from src.chains.shefa_birkat_hashem import ShefaBirkatHashem
 from src.chains.shufersal import Shufersal
 from src.chains.shuk_hayir import ShukHayir
 from src.chains.stop_market import StopMarket
-from src.chains.super_pharm import SuperPharm
+from src.chains.engines.multipage import Multipage
 from src.chains.tiv_taam import TivTaam
 from src.chains.victory import Victory
 from src.chains.yeinot_bitan import YeinotBitan
 from src.chains.yohananof import Yohananof
 from src.chains.zol_vebegadol import ZolVebegadol
-from src.promotion import main_latest_promos, log_promos_by_name, get_all_prices_with_promos
+from src.promotion import (
+    main_latest_promos,
+    log_promos_by_name,
+    get_all_prices_with_promos,
+)
 from src.store_utils import log_stores_ids
 from src.supermarket_chain import SupermarketChain
 from src.utils import (
@@ -43,7 +46,6 @@ from src.utils import (
 
 CHAINS_LIST = [
     Bareket,
-    MahsaneiHashook,
     DorAlon,
     Freshmarket,
     HaziHinam,
@@ -51,7 +53,6 @@ CHAINS_LIST = [
     StopMarket,
     TivTaam,
     Shufersal,
-    CoOp,
     Victory,
     Yohananof,
     ZolVebegadol,
@@ -62,8 +63,6 @@ CHAINS_LIST = [
     KingStore,
     ShefaBirkatHashem,
     YeinotBitan,
-    SuperPharm,
-    Mega,
 ]
 
 MONITORED_STORES = {
@@ -72,8 +71,8 @@ MONITORED_STORES = {
     repr(OsherAd): [3, 1],
     repr(YeinotBitan): [67, 4],
     repr(Yohananof): [20, 1],
-    repr(Victory): ['089', 1],
-    repr(HaziHinam): [1, 6]
+    repr(Victory): ["089", 1],
+    repr(HaziHinam): [1, 6],
 }
 
 Path(RESULTS_DIRNAME).mkdir(exist_ok=True)
