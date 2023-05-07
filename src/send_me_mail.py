@@ -56,11 +56,9 @@ def zip_res_and_all(dict_account: dict):
 
 
 def send_me_results_rar(dict_account: dict, timeing: str):
-    # mail = create_mail_account(dict_account)
     subprocess.Popen(
         ['sh', '-c',
          f"7zr a {timeing} -mx=9 -m0=lzma /home/saret/Gits/ss/results/"]).wait()
-    # mail.send(['saretbenny@gmail.com','bennyc@savion.huji.ac.il'],'results in rar',attachments=f"/home/saret/{datetime.datetime.now().strftime('%Y-%m-%d--%H.%M')}.7z")
 
 
 def send_me_raw_files_rar(dict_account: dict, timeing: str):
@@ -74,7 +72,6 @@ def send_me_logs(dict_account: dict):
     subprocess.Popen("/Scripts/MakeReport", shell=True).wait()
     mail.send(os.environ['SEND_TO_MAIL'].split(':'), f"data send {datetime.date.today()}", attachments=f"/home/saret/report{datetime.date.today()}.txt")
     os.remove(f"/home/saret/report{datetime.date.today()}.txt")
-    #subprocess.Popen(["sudo", "rm", "/var/mail/saret"], shell=True).wait()
 
 def move_res_and_raw():
     for file in glob("results/*")+glob('raw_files/*'):
