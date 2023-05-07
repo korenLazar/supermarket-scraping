@@ -17,7 +17,7 @@ import gridfs
 import threading
 from src.main import get_all_prices_with_promos, main_latest_promos, CHAINS_DICT
 import psutil
-from src.send_me_a_mail import create_mail_to_send, send_me_logs, zip_res_and_all
+from src.send_me_mail import create_mail_to_send, send_me_logs, zip_res_and_all
 LIST_OF_DICTS = []
 LIST_OF_BARCODES = []
 GLOBAL_DICT = {}
