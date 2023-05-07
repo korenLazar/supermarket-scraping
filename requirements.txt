@@ -13,3 +13,7 @@ pandas~=1.2.0
 argparse~=1.4.0
 XlsxWriter~=1.4.3
 il-supermarket-scraper==0.2.8
+pymongo<=4.1
+psutil==5.9.5
+yagmail==0.15.293
+pyscopg2<=65.0
