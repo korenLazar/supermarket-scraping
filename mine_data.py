@@ -250,35 +250,14 @@ def main_run_first(run: bool = False):
     global RUNNER
     chain_stores = connect_mongo(check_beggining=True).find({"chain": {"$exists": True}}).sort("_id", pymongo.ASCENDING)
     for chains in chain_stores:
-        # with open("helper_files/stores","r",encoding="utf_8") as f:
-        #     for l in f:
-        #         chainn,_id = l[:-1].split(',')
         p = False
         for _id in chains["storeId"]:
-            # multiprocessing.Pool
-            # if not p:
             try:
                 run_this_shit(chains["chain"], _id, run)
             except Exception as e:
                 print(e)
-            # run_this_shit(chains["chain"], _id,True)
-            # p = multiprocessing.Process(target=run_this_shit,args=(chains["chain"], _id))
-            # p.start()
-            # p2 = multiprocessing.Process(target=run_this_shit,args=(chains["chain"], _id))
-            # p2.start()
-            # p2.join()
-
-            # p.join()
-            # run_this_shit(chains["chain"], _id, True)
-            # threading.Thread(None, run_this_shit,args=(chains["chain"],_id)).start()
-            # threading.Thread(None, run_this_shit,args=(chains["chain"],_id,True)).start()
     while RUNNER:
         sleep(1)
-        # for indx,p in enumerate(RUNNER):
-        #     if not psutil.pid_exists(p):
-        #         RUNNER.pop(indx)
-        # if not RUNNER:
-        #     False
         for ind, r in enumerate(RUNNER):
             if not psutil.pid_exists(r):
                 RUNNER.pop(ind)
@@ -296,17 +275,13 @@ def another_connetction_to_mongo():
         File = re.match(r"helper_.+\.py$", file)
         if File and os.path.isfile(os.path.abspath(file)):
             with open(os.path.abspath(file), "r", encoding='utf_8') as f:
-                # if col.find_one({'file':file}):
                 col.update_one({'file': file}, {"$set": {'value': f.read()}}, True)
-                # else:
-                # col.insert_one({'file':file,'value':f.read()})
             fileees = pymongo.MongoClient(
                 os.environ['MONGODB']).get_database(os.environ['SUPER_PG_NAME'])
             varme = gridfs.GridFSBucket(fileees, "hhh")
             with varme.open_upload_stream(file) as g:
                 with open(file, "rb") as read_binary_file:
                     g.write(read_binary_file)
-            # varme.
 
 
 if __name__ == "__main__":
@@ -321,7 +296,6 @@ if __name__ == "__main__":
     print(f"len(sys.argv) <2?:\t{len(sys.argv) <2}")
     threads_before = threading.active_count()
     print(threads_before)
-    # input("press nter")
     if local:
         main_run_first()
         main_run_secound()
@@ -329,10 +303,6 @@ if __name__ == "__main__":
         main_run_secound()
         main_run_first()
     another_connetction_to_mongo()
-    # try:
-    #    main_run_first(True)
-    # except Exception:
-    #    pass
     new_db_size = sum([os.path.getsize(file) for file in glob("/mnt/MongoDB", recursive=True)+glob("/mnt/MongoDB/mongodb/", recursive=True)]
                       ) if os.path.exists("/mnt/MongoDB") else sum([os.path.getsize(file) for file in glob("/var/lib/mongodb", recursive=True)])
     dict_account = connect_mongo(collection_name="innerCommands").find({"username": {"$exists": True}})[1]
@@ -342,8 +312,4 @@ if __name__ == "__main__":
     for file in glob("/home/saret/*.7z", recursive=True):
         os.remove(file)
     send_me_logs(dict_account)
-    # for file in glob('/home/saret/Gits/ss/results/'):
-    #     os.remove(file)
-    # for file in glob('/home/saret/Gits/ss/results/'):
-    #     os.remove(f'/home/saret/Gits/ss/results/{file}')
 # TODO: documentize this shit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

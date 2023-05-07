@@ -10,8 +10,6 @@ import os
 
 
 def create_mail_account(dict_account: dict):
-    # with open("/home/saret/fuckthispass","r",encoding='utf_8') as file:
-    #     acc = file.read().split("\n")
     return yagmail.SMTP(dict_account["username"], dict_account["pwd"])
 
 def calculate_size(sizes: list[int]):
@@ -38,18 +36,7 @@ def create_mail_to_send(
               ["/var/log/azureserver.out.log", "/var/log/azureserver.error.log"])
 
 def sqlme(raw: str, res: str):
-    # db = sqlite3.connect("/mnt/MongoDB/helper_save_data.db")
-    # datetime_me = re.findall(r'(?:[\d\-\,]+)', raw)[0]
-    
     subprocess.Popen("/Scripts/sqlite")
-        # ['/usr/bin/sqlite3', '/mnt/MongoDB/helper_save_data.db', f"""'insert into xml(xml, datetime) values (readfile("{raw}"),{datetime_me})'"""], shell=True)
-        # f"""/usr/bin/sqlite3 /mnt/MongoDB/helper_save_data.db 'insert into xml(xml, datetime) values (readfile("{raw}"),{datetime_me})'""")
-    # db.execute(f"insert into xml(xml, datetime) values({raw},{datetime_me})")
-    # datetime_me = re.findall(r'(?:[\d\-\,]+)', res)[0]
-    # subprocess.Popen(
-        # f"""/usr/bin/sqlite3 /mnt/MongoDB/helper_save_data.db 'insert into xml(xml, datetime) values (readfile("{{{res}}}"),{datetime_me})'""")
-    # db.execute(f"insert into xml(xml, datetime) values({res},{datetime_me})")
-    # db.commit()
     
 def zip_res_and_all(dict_account: dict):
     mail = create_mail_account(dict_account)
