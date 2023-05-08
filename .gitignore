@@ -10,3 +10,4 @@ helper_*
 .vscode/
 desktop.ini
 logging.log
+.env
