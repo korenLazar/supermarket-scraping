@@ -58,13 +58,13 @@ def zip_res_and_all(dict_account: dict):
 def send_me_results_rar(dict_account: dict, timeing: str):
     subprocess.Popen(
         ['sh', '-c',
-         f"7zr a {timeing} -mx=9 -m0=lzma /home/saret/Gits/ss/results/"]).wait()
+         f"7zr a {timeing} -mx=9 -m0=lzma {os.environ['LOCATION']}/results/"]).wait()
 
 
 def send_me_raw_files_rar(dict_account: dict, timeing: str):
     subprocess.Popen(
         ['sh', '-c',
-         f"7zr a {timeing} -mx=9 -m0=lzma /home/saret/Gits/ss/raw_files/"]).wait()
+         f"7zr a {timeing} -mx=9 -m0=lzma {os.environ['LOCATION']}/raw_files/"]).wait()
 
 
 def send_me_logs(dict_account: dict):
@@ -75,8 +75,8 @@ def send_me_logs(dict_account: dict):
 
 def move_res_and_raw():
     for file in glob("results/*")+glob('raw_files/*'):
-        if not os.path.exists("/home/saret/old_ss_data"):
-            os.mkdir("/home/saret/old_ss_data")
-            os.mkdir("/home/saret/old_ss_data/raw_files")
-            os.mkdir("/home/saret/old_ss_data/results")
-        shutil.move(file, f"/home/saret/old_ss_data/{file}")
+        if not os.path.exists(f"{os.environ['SAVE_LOCATION']}"):
+            os.mkdir(f"{os.environ['SAVE_LOCATION']}")
+            os.mkdir(f"{os.environ['SAVE_LOCATION']}/raw_files")
+            os.mkdir(f"{os.environ['SAVE_LOCATION']}/results")
+        shutil.move(file, f"{os.environ['SAVE_LOCATION']}/{file}")

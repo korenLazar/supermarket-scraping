@@ -305,7 +305,7 @@ if __name__ == "__main__":
     another_connetction_to_mongo()
     new_db_size = sum([os.path.getsize(file) for file in glob("/mnt/MongoDB", recursive=True)+glob("/mnt/MongoDB/mongodb/", recursive=True)]
                       ) if os.path.exists("/mnt/MongoDB") else sum([os.path.getsize(file) for file in glob("/var/lib/mongodb", recursive=True)])
-    dict_account = connect_mongo(collection_name="innerCommands").find({"username": os.environ["MAIL"]})
+    dict_account = connect_mongo(collection_name="innerCommands").find({"username": os.environ["MAIL"]})[0]
     create_mail_to_send(BEGINING_COUNT_DOCUMENTS, END_COUNT_DOCUMENTS, ENDING_TIME,
                         ITEMS_BEEN_UPDATED, dict_account, UPDATED_CHAINS, [db_size, new_db_size])
     zip_res_and_all(dict_account)
