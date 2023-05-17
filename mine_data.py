@@ -70,18 +70,20 @@ def download_from_chain(chain: str, store_id: int, promos: bool = False):
             False, False, True)
 
 
+
 def send_data_to_db(json_data: dict, _chainn: str = None, store_id: int = None, date: str = None) -> None:
     conn, connect = connect_to_pg()
     chhain = CHAIN_INDEX[_chainn]
     execute_batch(
-        connect, "insert into product_names values(%(code)s,%(name)s," + f"{chhain}) on conflict do nothing",
+        connect, "select insert_product_name(%(code)s,%(name)s," + f"{chhain})",
         list(json_data.values()))
     conn.commit()
     execute_batch(
         connect,
-        "insert into price(barcode,price,final_price,price_by_measure,manu,chain,_date,store_id) values(%(code)s,%(price)s,%(final_price)s,%(price_by_measure)s, %(manufacturer)s," +
-        f"{chhain},'{date}',{store_id}) on conflict do nothing", list(json_data.values()))
+        "select insert_price(%(code)s,%(price)s,%(final_price)s,%(price_by_measure)s, %(manufacturer)s," +
+        f"{chhain},'{date}',{store_id})", list(json_data.values()))
     conn.commit()
+
 
 
 def __create_chains_updating_dict(server: bool = True) -> dict:
